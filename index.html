@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>BritWorld · Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,700&family=Italiana&family=Inter:wght@300;400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bone:#f1ead9;
+  --bone-dim:#d9d1bc;
+  --ink:#0a0706;
+  --ink-2:#15110f;
+  --ink-3:#1f1a16;
+  --oxblood:#7a1a2b;
+  --oxblood-light:#a32b3d;
+  --emerald:#0c3b2e;
+  --emerald-light:#1a6b52;
+  --gold:#b88940;
+  --gold-light:#d4a558;
+  --gold-bright:#e8bd68;
+  --teal-neon:#14b8a6;
+  --amethyst:#6b3d6e;
+  --coral:#c97b5a;
+  --pink-neon:#ec4899;
+  --display:'Playfair Display', serif;
+  --italiana:'Italiana', serif;
+  --body:'Inter', sans-serif;
+  --mono:'JetBrains Mono', monospace;
+  --black-display:'Archivo Black', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--ink);color:var(--bone);
+  font-family:var(--body);user-select:none;touch-action:none}
+
+/* Film grain overlay across everything */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.08;
+  background-image:
+    repeating-radial-gradient(circle at 0 0, rgba(255,255,255,.05) 0, rgba(255,255,255,.05) 1px, transparent 1px, transparent 3px),
+    repeating-linear-gradient(45deg, rgba(0,0,0,.1) 0 1px, transparent 1px 2px);
+  mix-blend-mode:overlay;animation:grain .4s steps(3) infinite;
+}
+@keyframes grain{
+  0%{transform:translate(0,0)}
+  33%{transform:translate(-1px,1px)}
+  66%{transform:translate(1px,-1px)}
+  100%{transform:translate(0,0)}
+}
+
+/* ═══════════════════ LOGIN ═══════════════════ */
+#login{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:30px 20px;overflow-y:auto;
+  background:
+    radial-gradient(ellipse 60% 40% at 30% 20%, rgba(184,137,64,.08) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 60% at 80% 80%, rgba(122,26,43,.12) 0%, transparent 50%),
+    radial-gradient(ellipse at center, var(--ink-3) 0%, var(--ink) 80%);
+}
+
+/* Corner ornaments */
+.corner{position:absolute;width:60px;height:60px;color:var(--gold);opacity:.4;pointer-events:none}
+.corner.tl{top:24px;left:24px;border-top:1px solid currentColor;border-left:1px solid currentColor}
+.corner.tr{top:24px;right:24px;border-top:1px solid currentColor;border-right:1px solid currentColor}
+.corner.bl{bottom:24px;left:24px;border-bottom:1px solid currentColor;border-left:1px solid currentColor}
+.corner.br{bottom:24px;right:24px;border-bottom:1px solid currentColor;border-right:1px solid currentColor}
+.corner::before{content:'◆';position:absolute;font-size:8px;
+  top:-5px;left:-5px;background:var(--ink);padding:2px 4px}
+.corner.tr::before{left:auto;right:-5px}
+.corner.bl::before{top:auto;bottom:-5px}
+.corner.br::before{top:auto;bottom:-5px;left:auto;right:-5px}
+
+/* Title block */
+.title-block{text-align:center;position:relative;z-index:2;margin-bottom:28px;max-width:560px}
+.overline{font-family:var(--mono);font-size:10px;color:var(--gold);
+  letter-spacing:6px;text-transform:uppercase;margin-bottom:14px;opacity:.85;
+  display:flex;align-items:center;justify-content:center;gap:14px}
+.overline .dash{height:1px;flex:1;max-width:80px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+
+.brand{font-family:var(--italiana);font-size:clamp(34px,7.5vw,60px);line-height:1;
+  color:var(--bone);letter-spacing:1px;font-weight:400;position:relative;
+  text-shadow:0 4px 30px rgba(184,137,64,.2);margin-top:22px;white-space:nowrap}
+.brand .world{color:var(--gold);font-style:italic;position:relative;display:inline-block}
+.brand .world::before, .brand .world::after{
+  content:'◆';position:absolute;top:50%;transform:translateY(-55%);
+  font-family:var(--mono);font-size:10px;color:var(--gold);opacity:.6}
+.brand .world::before{right:calc(100% + 14px)}
+.brand .world::after{left:calc(100% + 14px)}
+
+/* UK flag */
+.flag-wrap{display:flex;justify-content:center;margin-top:4px;position:relative}
+.flag-wrap::before, .flag-wrap::after{
+  content:'';position:absolute;top:50%;width:60px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.6}
+.flag-wrap::before{right:calc(50% + 90px)}
+.flag-wrap::after{left:calc(50% + 90px)}
+.uk-flag{width:160px;height:80px;display:block;
+  filter:drop-shadow(0 6px 24px rgba(163,43,61,.3)) drop-shadow(0 0 1px rgba(184,137,64,.4));
+  border:1px solid rgba(184,137,64,.25);
+  background:var(--ink-2)}
+
+/* Login card */
+.card{width:100%;max-width:520px;
+  background:linear-gradient(180deg,var(--ink-2) 0%,var(--ink) 100%);
+  border:1px solid rgba(184,137,64,.3);
+  padding:32px 30px 28px;position:relative;z-index:2;
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.7),
+    inset 0 1px 0 rgba(255,255,255,.03);
+}
+.card::before{content:'';position:absolute;inset:6px;border:1px solid rgba(184,137,64,.15);pointer-events:none}
+.card::after{content:'◆  ◆  ◆';position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+  color:var(--gold);font-size:10px;letter-spacing:8px;background:var(--ink);padding:0 12px}
+
+.label{font-family:var(--mono);font-size:9px;color:var(--gold-light);
+  letter-spacing:3px;text-transform:uppercase;display:block;margin-bottom:10px;font-weight:700;
+  display:flex;justify-content:space-between;align-items:center}
+.label .count{opacity:.5;font-size:8px;letter-spacing:1.5px}
+
+#nick{width:100%;padding:14px 0;background:transparent;
+  border:none;border-bottom:1px solid rgba(184,137,64,.4);
+  color:var(--bone);font-family:var(--display);font-size:26px;font-style:italic;
+  outline:none;transition:all .3s;margin-bottom:26px;font-weight:400}
+#nick:focus{border-bottom-color:var(--gold);border-bottom-width:2px}
+#nick::placeholder{color:rgba(241,234,217,.25);font-style:italic}
+
+/* Avatar tabs */
+.tabs{display:flex;gap:0;margin-bottom:18px;border-bottom:1px solid rgba(184,137,64,.2)}
+.tab{flex:1;padding:12px 6px;background:transparent;border:none;
+  font-family:var(--mono);font-size:9px;color:rgba(241,234,217,.5);letter-spacing:2.5px;
+  text-transform:uppercase;cursor:pointer;transition:all .2s;
+  border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:700}
+.tab:hover{color:var(--bone)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* Avatar grid */
+.av-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:22px}
+.av{aspect-ratio:1;background:var(--ink-3);cursor:pointer;position:relative;overflow:hidden;
+  border:1px solid rgba(184,137,64,.15);transition:all .25s ease;display:flex;align-items:center;justify-content:center}
+.av:hover{border-color:rgba(184,137,64,.6);transform:translateY(-2px)}
+.av.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 8px 20px rgba(184,137,64,.3)}
+.av.sel::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(184,137,64,.15) 100%);pointer-events:none}
+.av svg{width:100%;height:100%;display:block}
+.av-name{position:absolute;bottom:4px;left:4px;right:4px;
+  font-family:var(--mono);font-size:7px;text-align:center;letter-spacing:1px;
+  color:var(--bone-dim);text-transform:uppercase;font-weight:700;
+  background:rgba(10,7,6,.85);padding:2px 0;opacity:0;transition:opacity .2s}
+.av:hover .av-name, .av.sel .av-name{opacity:1}
+
+/* Enter button */
+.enter{width:100%;padding:18px;background:transparent;
+  border:1px solid var(--gold);color:var(--gold);font-family:var(--mono);font-size:11px;
+  font-weight:700;letter-spacing:5px;text-transform:uppercase;cursor:pointer;
+  transition:all .3s cubic-bezier(.4,.0,.2,1);position:relative;overflow:hidden}
+.enter::before{content:'';position:absolute;inset:0;background:var(--gold);
+  transform:translateY(101%);transition:transform .4s cubic-bezier(.4,.0,.2,1);z-index:-1}
+.enter:hover{color:var(--ink);letter-spacing:7px}
+.enter:hover::before{transform:translateY(0)}
+.enter span{position:relative;z-index:1}
+
+.footer-note{font-family:var(--mono);font-size:8px;color:rgba(241,234,217,.35);
+  letter-spacing:2px;margin-top:24px;text-align:center;line-height:1.8;
+  position:relative;z-index:2;text-transform:uppercase}
+.footer-note::before, .footer-note::after{content:'◆';color:var(--gold);margin:0 8px;opacity:.6}
+
+/* ═══════════════════ WORLD / MAP ═══════════════════ */
+#world{position:fixed;inset:0;display:none;flex-direction:column;z-index:1;background:var(--ink)}
+#world.active{display:flex}
+
+.hud{position:absolute;top:0;left:0;right:0;z-index:50;display:flex;
+  justify-content:space-between;align-items:center;padding:16px 22px;
+  background:linear-gradient(180deg,rgba(0,0,0,.6),transparent 100%);pointer-events:none}
+.hud-place-block{pointer-events:auto}
+.hud-over{font-family:var(--mono);font-size:10px;color:var(--gold);
+  letter-spacing:4px;text-transform:uppercase;font-weight:700;opacity:.9;
+  text-shadow:0 2px 8px rgba(0,0,0,.9)}
+.hud-over::before, .hud-over::after{content:'';display:inline-block}
+
+.hud-right{display:flex;gap:8px;pointer-events:auto;align-items:center}
+.hud-compass{width:40px;height:40px;display:block;opacity:.75;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,.6));margin-right:4px}
+.hud-badge{font-family:var(--mono);font-size:9px;color:var(--bone);font-weight:700;
+  letter-spacing:2px;padding:8px 12px;background:rgba(10,7,6,.85);
+  border:1px solid rgba(184,137,64,.4);text-transform:uppercase}
+.hud-badge .dot{display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--teal-neon);margin-right:6px;box-shadow:0 0 8px var(--teal-neon);
+  animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.hud-btn{width:36px;height:36px;background:rgba(10,7,6,.85);
+  border:1px solid rgba(184,137,64,.4);color:var(--bone);
+  font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);transition:all .2s}
+.hud-btn:hover{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+
+#map-wrap{position:absolute;inset:0;overflow:hidden;background:var(--ink)}
+#map-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+
+/* Decorative bottom strip */
+.bottom-strip{position:absolute;bottom:0;left:0;right:0;height:80px;z-index:40;
+  background:linear-gradient(0deg,rgba(0,0,0,.9),transparent 100%);pointer-events:none;
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:16px}
+.bottom-strip .legend{font-family:var(--mono);font-size:9px;color:var(--gold-light);
+  letter-spacing:4px;text-transform:uppercase;opacity:.7;text-align:center}
+
+/* Switch button */
+.switch-btn{position:fixed;top:14px;right:14px;z-index:9999;
+  background:var(--oxblood);color:var(--bone);border:1px solid var(--gold);
+  font-family:var(--mono);font-size:10px;letter-spacing:2px;padding:8px 14px;
+  cursor:pointer;text-transform:uppercase;font-weight:700}
+.switch-btn:hover{background:var(--gold);color:var(--ink)}
+
+/* Pulse prompt */
+.prompt-hint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+  z-index:45;font-family:var(--mono);font-size:10px;color:var(--gold);
+  letter-spacing:3px;text-transform:uppercase;font-weight:700;
+  padding:10px 18px;background:rgba(10,7,6,.9);border:1px solid var(--gold);
+  pointer-events:none;opacity:0;transition:opacity .25s}
+.prompt-hint.show{opacity:1;animation:hintPulse 1.6s ease-in-out infinite}
+@keyframes hintPulse{0%,100%{box-shadow:0 0 0 0 rgba(184,137,64,.4)}50%{box-shadow:0 0 0 12px rgba(184,137,64,0)}}
+.prompt-hint kbd{display:inline-block;background:var(--gold);color:var(--ink);
+  padding:2px 6px;margin-right:8px;font-size:9px;letter-spacing:0;font-family:var(--mono)}
+</style>
+</head>
+<body>
+
+<button class="switch-btn" onclick="toggleView()">→ See Map</button>
+
+<!-- ═════════ LOGIN ═════════ -->
+<div id="login">
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <div class="title-block">
+    <div class="overline">
+      <span class="dash"></span>
+      <span>Est. 2026 · The British Isles</span>
+      <span class="dash"></span>
+    </div>
+    <div class="flag-wrap">
+      <svg class="uk-flag" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg" aria-label="UK Flag">
+        <defs>
+          <linearGradient id="flagInk" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1f1a16"/>
+            <stop offset="100%" stop-color="#0a0706"/>
+          </linearGradient>
+          <linearGradient id="flagGold" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#e8bd68"/>
+            <stop offset="50%" stop-color="#b88940"/>
+            <stop offset="100%" stop-color="#8a6428"/>
+          </linearGradient>
+          <linearGradient id="flagBlood" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#a32b3d"/>
+            <stop offset="100%" stop-color="#5a0e1a"/>
+          </linearGradient>
+        </defs>
+        <!-- dark ink base -->
+        <rect width="60" height="30" fill="url(#flagInk)"/>
+        <!-- gold saltire (diagonal) outer -->
+        <path d="M0 0 L60 30 M60 0 L0 30" stroke="url(#flagGold)" stroke-width="5.5" opacity=".85"/>
+        <!-- oxblood saltire inner -->
+        <path d="M0 0 L60 30 M60 0 L0 30" stroke="url(#flagBlood)" stroke-width="2.2"/>
+        <!-- central cross gold outer -->
+        <rect x="0" y="11" width="60" height="8" fill="url(#flagGold)" opacity=".9"/>
+        <rect x="25" y="0" width="10" height="30" fill="url(#flagGold)" opacity=".9"/>
+        <!-- central cross oxblood inner -->
+        <rect x="0" y="13" width="60" height="4" fill="url(#flagBlood)"/>
+        <rect x="27" y="0" width="6" height="30" fill="url(#flagBlood)"/>
+        <!-- subtle grain overlay -->
+        <rect width="60" height="30" fill="url(#flagInk)" opacity=".15"/>
+      </svg>
+    </div>
+    <h1 class="brand">Welcome to <span class="world">BritChat</span></h1>
+  </div>
+
+  <div class="card">
+    <div class="label">
+      <span>◦ 01 · Your Name</span>
+      <span class="count">Max 16</span>
+    </div>
+    <input id="nick" type="text" placeholder="What do we call you?" maxlength="16" autocomplete="off">
+
+    <div class="label"><span>◦ 02 · Choose Your Look</span></div>
+    <div class="tabs">
+      <button class="tab active">◆ Silhouettes</button>
+      <button class="tab">◇ Your Photo</button>
+    </div>
+    <div class="av-grid" id="av-grid"></div>
+
+    <button class="enter"><span>⟡ Enter BritWorld ⟡</span></button>
+  </div>
+
+  <div class="footer-note">18+ · Be Kind · Mind Your Manners · Enjoy Yourself</div>
+</div>
+
+<!-- ═════════ WORLD ═════════ -->
+<div id="world">
+  <div class="hud">
+    <div class="hud-place-block">
+      <div class="hud-over">◆ Explore the UK Chat Rooms on BritChat ◆</div>
+    </div>
+    <div class="hud-right">
+      <svg class="hud-compass" viewBox="0 0 50 50" aria-hidden="true">
+        <circle cx="25" cy="25" r="22" fill="none" stroke="rgba(184,137,64,.45)" stroke-width="1"/>
+        <circle cx="25" cy="25" r="16" fill="none" stroke="rgba(184,137,64,.3)" stroke-width="1"/>
+        <path d="M25 5 L22 25 L28 25 Z" fill="rgba(184,137,64,.9)"/>
+        <path d="M25 45 L22 25 L28 25 Z" fill="rgba(241,234,217,.25)" stroke="rgba(184,137,64,.5)" stroke-width=".5"/>
+        <path d="M5 25 L25 22 L25 28 Z" fill="rgba(241,234,217,.2)" stroke="rgba(184,137,64,.4)" stroke-width=".5"/>
+        <path d="M45 25 L25 22 L25 28 Z" fill="rgba(241,234,217,.2)" stroke="rgba(184,137,64,.4)" stroke-width=".5"/>
+        <text x="25" y="3" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="5" fill="#b88940" font-weight="700">N</text>
+      </svg>
+      <div class="hud-badge"><span class="dot"></span>1 ONLINE</div>
+      <button class="hud-btn">?</button>
+      <button class="hud-btn">×</button>
+    </div>
+  </div>
+
+  <div id="map-wrap">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <div class="prompt-hint" id="prompt"><kbd>E</kbd>Enter London</div>
+</div>
+
+<script>
+// ═══════════════ AVATARS (silhouette SVGs) ═══════════════
+const AVATARS = [
+  {id:'femme_fatale', name:'Fatale',   bg:'#7a1a2b', fig:'femme_hat'},
+  {id:'dandy',        name:'Dandy',    bg:'#0c3b2e', fig:'tuxedo'},
+  {id:'trench',       name:'Trench',   bg:'#1f1a16', fig:'trench_coat'},
+  {id:'slip',         name:'Slip',     bg:'#6b3d6e', fig:'slip_dress'},
+  {id:'leather',      name:'Leather',  bg:'#0a0706', fig:'leather'},
+  {id:'beret',        name:'Beret',    bg:'#c97b5a', fig:'beret_artist'},
+  {id:'silk',         name:'Silk',     bg:'#b88940', fig:'silk_robe'},
+  {id:'widebrim',     name:'Brim',     bg:'#14b8a6', fig:'wide_brim'},
+  {id:'gatsby',       name:'Gatsby',   bg:'#7a1a2b', fig:'gatsby'},
+  {id:'flapper',      name:'Flapper',  bg:'#b88940', fig:'flapper'},
+  {id:'mod',          name:'Mod',      bg:'#0c3b2e', fig:'mod_suit'},
+  {id:'velvet',       name:'Velvet',   bg:'#6b3d6e', fig:'velvet_suit'},
+  {id:'smoke',        name:'Smoke',    bg:'#1f1a16', fig:'smoking_jacket'},
+  {id:'heels',        name:'Heels',    bg:'#ec4899', fig:'cocktail'},
+  {id:'cravat',       name:'Cravat',   bg:'#14b8a6', fig:'cravat'},
+  {id:'pearl',        name:'Pearl',    bg:'#c97b5a', fig:'pearl_gown'},
+];
+
+// Each figure is a single-path black silhouette, styled adult/editorial
+function avatarSVG(bg, fig){
+  const figs = {
+    femme_hat: `<path d="M50 82 Q50 55 50 48 Q40 45 40 38 Q38 32 44 28 Q40 25 38 20 Q40 15 50 14 Q60 15 62 20 Q60 25 56 28 Q62 32 60 38 Q60 45 50 48 Z M30 82 Q30 68 50 65 Q70 68 70 82 Z" fill="#0a0706"/>
+                <ellipse cx="50" cy="22" rx="18" ry="4" fill="#0a0706"/>`,
+    tuxedo: `<path d="M50 44 Q44 44 43 38 Q41 32 44 27 Q47 23 50 23 Q53 23 56 27 Q59 32 57 38 Q56 44 50 44 Z M35 82 Q35 60 40 55 Q50 50 60 55 Q65 60 65 82 Z M48 55 L52 55 L51 82 L49 82 Z" fill="#0a0706"/>
+            <path d="M45 58 L50 68 L55 58 Z" fill="${bg}"/>`,
+    trench_coat: `<path d="M50 42 Q44 42 43 36 Q41 30 44 26 Q47 22 50 22 Q53 22 56 26 Q59 30 57 36 Q56 42 50 42 Z M32 82 Q30 58 40 52 Q50 48 60 52 Q70 58 68 82 Z" fill="#0a0706"/>
+                  <path d="M40 55 L60 55 L58 82 L42 82 Z" fill="#1f1a16"/>
+                  <circle cx="44" cy="62" r="1" fill="${bg}"/><circle cx="44" cy="70" r="1" fill="${bg}"/>`,
+    slip_dress: `<path d="M50 40 Q44 40 43 34 Q41 28 44 24 Q47 20 50 20 Q53 20 56 24 Q59 28 57 34 Q56 40 50 40 Z M42 44 L58 44 L63 82 L37 82 Z" fill="#0a0706"/>
+                 <path d="M45 46 L50 52 L55 46 Z" fill="${bg}" opacity=".3"/>`,
+    leather: `<path d="M50 42 Q44 42 43 36 Q41 30 44 26 Q47 22 50 22 Q53 22 56 26 Q59 30 57 36 Q56 42 50 42 Z M36 82 L36 55 Q42 48 50 48 Q58 48 64 55 L64 82 Z" fill="#0a0706"/>
+              <path d="M45 52 L50 82 L55 52 Z" fill="${bg}" opacity=".2"/>
+              <circle cx="44" cy="58" r=".8" fill="${bg}"/><circle cx="56" cy="58" r=".8" fill="${bg}"/>`,
+    beret_artist: `<path d="M50 44 Q44 44 43 38 Q41 32 44 28 Q47 24 50 24 Q53 24 56 28 Q59 32 57 38 Q56 44 50 44 Z M36 82 L36 58 Q42 53 50 53 Q58 53 64 58 L64 82 Z" fill="#0a0706"/>
+                   <ellipse cx="50" cy="22" rx="12" ry="4" fill="#0a0706"/><rect x="60" y="19" width="2" height="5" fill="#0a0706"/>`,
+    silk_robe: `<path d="M50 42 Q44 42 43 36 Q41 30 44 26 Q47 22 50 22 Q53 22 56 26 Q59 30 57 36 Q56 42 50 42 Z M32 82 L38 48 L50 52 L62 48 L68 82 Z" fill="#0a0706"/>
+                <path d="M42 50 L50 82 L58 50 Z" fill="${bg}" opacity=".3"/>`,
+    wide_brim: `<path d="M50 48 Q44 48 43 42 Q41 36 44 32 Q47 28 50 28 Q53 28 56 32 Q59 36 57 42 Q56 48 50 48 Z M36 82 L36 58 Q42 53 50 53 Q58 53 64 58 L64 82 Z" fill="#0a0706"/>
+                <ellipse cx="50" cy="24" rx="24" ry="5" fill="#0a0706"/>`,
+    gatsby: `<path d="M50 42 Q44 42 43 36 Q41 30 44 26 Q47 22 50 22 Q53 22 56 26 Q59 30 57 36 Q56 42 50 42 Z M36 82 L36 55 Q42 50 50 50 Q58 50 64 55 L64 82 Z" fill="#0a0706"/>
+             <path d="M36 22 Q40 18 50 18 Q60 18 64 22 L64 25 Q50 22 36 25 Z" fill="#0a0706"/>
+             <path d="M45 55 L50 80 L55 55 Z" fill="${bg}" opacity=".2"/>`,
+    flapper: `<path d="M50 42 Q44 42 43 36 Q41 30 44 26 Q47 22 50 22 Q53 22 56 26 Q59 30 57 36 Q56 42 50 42 Z M42 44 L58 44 L62 82 L38 82 Z" fill="#0a0706"/>
+              <path d="M36 22 Q40 18 50 18 Q60 18 64 22 L60 32 L40 32 Z" fill="#0a0706"/>
+              <circle cx="50" cy="18" r="2.5" fill="${bg}"/>
+              <path d="M42 46 L50 82 L58 46" stroke="${bg}" stroke-width=".5" fill="none" opacity=".4"/>`,
+    mod_suit: `<path d="M50 44 Q44 44 43 38 Q41 32 44 28 Q47 24 50 24 Q53 24 56 28 Q59 32 57 38 Q56 44 50 44 Z M36 82 L36 56 Q42 51 50 51 Q58 51 64 56 L64 82 Z" fill="#0a0706"/>
+               <path d="M36 24 Q38 20 50 20 Q62 20 64 24 L64 30 Q50 26 36 30 Z" fill="#0a0706"/>
+               <path d="M45 54 L50 66 L55 54 Z" fill="${bg}"/>`,
+    velvet_suit: `<path d="M50 42 Q44 42 43 36 Q41 30 44 26 Q47 22 50 22 Q53 22 56 26 Q59 30 57 36 Q56 42 50 42 Z M34 82 L34 54 Q42 48 50 48 Q58 48 66 54 L66 82 Z" fill="#0a0706"/>
+                  <path d="M44 51 L50 82 L56 51 Z" fill="${bg}" opacity=".25"/>
+                  <circle cx="50" cy="58" r="1.2" fill="${bg}"/>`,
+    smoking_jacket: `<path d="M50 42 Q44 42 43 36 Q41 30 44 26 Q47 22 50 22 Q53 22 56 26 Q59 30 57 36 Q56 42 50 42 Z M34 82 L34 54 Q42 48 50 48 Q58 48 66 54 L66 82 Z" fill="#0a0706"/>
+                     <path d="M40 54 L50 66 L60 54 L58 82 L42 82 Z" fill="${bg}" opacity=".15"/>
+                     <path d="M60 38 Q64 34 66 30" stroke="${bg}" stroke-width="1" fill="none" opacity=".4"/>
+                     <circle cx="66" cy="30" r="1" fill="${bg}" opacity=".5"/>`,
+    cocktail: `<path d="M50 40 Q44 40 43 34 Q41 28 44 24 Q47 20 50 20 Q53 20 56 24 Q59 28 57 34 Q56 40 50 40 Z M44 42 L56 42 L60 58 L50 54 L40 58 Z M48 60 L52 60 L54 82 L46 82 Z" fill="#0a0706"/>
+               <path d="M50 24 Q48 20 46 18 M50 24 Q52 20 54 18" stroke="${bg}" stroke-width=".6" fill="none" opacity=".6"/>`,
+    cravat: `<path d="M50 42 Q44 42 43 36 Q41 30 44 26 Q47 22 50 22 Q53 22 56 26 Q59 30 57 36 Q56 42 50 42 Z M36 82 L36 56 Q42 51 50 51 Q58 51 64 56 L64 82 Z" fill="#0a0706"/>
+             <path d="M46 48 Q50 52 54 48 L54 58 Q50 62 46 58 Z" fill="${bg}"/>
+             <path d="M48 58 L50 72 L52 58 Z" fill="${bg}"/>`,
+    pearl_gown: `<path d="M50 40 Q44 40 43 34 Q41 28 44 24 Q47 20 50 20 Q53 20 56 24 Q59 28 57 34 Q56 40 50 40 Z M44 44 L56 44 L64 82 L36 82 Z" fill="#0a0706"/>
+                 <circle cx="46" cy="42" r="1" fill="${bg}"/><circle cx="50" cy="42" r="1" fill="${bg}"/><circle cx="54" cy="42" r="1" fill="${bg}"/>
+                 <circle cx="48" cy="45" r=".8" fill="${bg}"/><circle cx="52" cy="45" r=".8" fill="${bg}"/>`,
+  };
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+    <rect width="100" height="100" fill="${bg}"/>
+    <rect width="100" height="100" fill="url(#vign)"/>
+    <defs><radialGradient id="vign" cx="50%" cy="50%" r="55%"><stop offset="50%" stop-color="transparent"/><stop offset="100%" stop-color="#000" stop-opacity=".35"/></radialGradient></defs>
+    ${figs[fig] || figs.tuxedo}
+  </svg>`;
+}
+
+// Render avatar grid
+const avGrid = document.getElementById('av-grid');
+AVATARS.forEach((a,i) => {
+  const div = document.createElement('div');
+  div.className = 'av' + (i===0 ? ' sel' : '');
+  div.innerHTML = avatarSVG(a.bg, a.fig) + `<div class="av-name">${a.name}</div>`;
+  div.onclick = () => {
+    document.querySelectorAll('.av').forEach(x => x.classList.remove('sel'));
+    div.classList.add('sel');
+  };
+  avGrid.appendChild(div);
+});
+
+// ═══════════════ VIEW TOGGLE ═══════════════
+let onMap = false;
+function toggleView(){
+  onMap = !onMap;
+  document.getElementById('login').style.display = onMap ? 'none' : 'flex';
+  document.getElementById('world').classList.toggle('active', onMap);
+  document.querySelector('.switch-btn').textContent = onMap ? '← See Login' : '→ See Map';
+  if(onMap){ setTimeout(() => { resizeMap(); drawMap(); }, 50); }
+}
+window.toggleView = toggleView;
+
+// ═══════════════ TYPOGRAPHIC MAP ═══════════════
+const canvas = document.getElementById('map-canvas');
+const ctx = canvas.getContext('2d');
+
+function resizeMap(){
+  const wrap = document.getElementById('map-wrap');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = wrap.clientWidth * dpr;
+  canvas.height = wrap.clientHeight * dpr;
+  canvas.style.width = wrap.clientWidth + 'px';
+  canvas.style.height = wrap.clientHeight + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', () => { if(onMap){ resizeMap(); drawMap(); }});
+
+// City data: normalised coords (0-1) on an 800x1000 art-space then scaled to canvas
+const CITY_ART = [
+  {name:'LONDON',    x:0.62, y:0.74, size:28, color:'#e8bd68', hero:true},
+  {name:'EDINBURGH', x:0.46, y:0.28, size:20, color:'#ec4899'},
+  {name:'GLASGOW',   x:0.37, y:0.29, size:18, color:'#14b8a6'},
+  {name:'MANCHESTER',x:0.48, y:0.54, size:17, color:'#c97b5a'},
+  {name:'LIVERPOOL', x:0.40, y:0.55, size:16, color:'#b88940'},
+  {name:'BIRMINGHAM',x:0.50, y:0.65, size:16, color:'#6b3d6e'},
+  {name:'NEWCASTLE', x:0.52, y:0.40, size:15, color:'#14b8a6'},
+  {name:'CARDIFF',   x:0.39, y:0.72, size:16, color:'#ec4899'},
+  {name:'BRIGHTON',  x:0.60, y:0.82, size:14, color:'#c97b5a'},
+  {name:'OXFORD',    x:0.55, y:0.72, size:14, color:'#b88940'},
+  {name:'DUBLIN',    x:0.18, y:0.56, size:18, color:'#14b8a6'},
+  {name:'BELFAST',   x:0.27, y:0.40, size:16, color:'#ec4899'},
+];
+
+// Filler counties/towns for density (name, approx normalised x, y, size)
+const FILLER = [
+  ['HIGHLANDS',0.40,0.15,11,'#7a1a2b'],['INVERNESS',0.45,0.18,9,'#b88940'],
+  ['ABERDEEN',0.52,0.22,10,'#6b3d6e'],['FIFE',0.47,0.32,8,'#c97b5a'],
+  ['DUNDEE',0.50,0.25,9,'#14b8a6'],['PERTH',0.45,0.26,8,'#b88940'],
+  ['STIRLING',0.42,0.30,8,'#ec4899'],['BORDERS',0.48,0.36,8,'#7a1a2b'],
+  ['AYR',0.36,0.35,8,'#c97b5a'],['ARGYLL',0.32,0.28,9,'#b88940'],
+  ['ISLAY',0.26,0.30,7,'#6b3d6e'],['SKYE',0.30,0.20,8,'#14b8a6'],
+  ['MULL',0.28,0.26,7,'#c97b5a'],['ORKNEY',0.45,0.08,8,'#ec4899'],
+  ['HEBRIDES',0.25,0.18,8,'#b88940'],['CUMBRIA',0.44,0.44,10,'#7a1a2b'],
+  ['LAKES',0.42,0.46,8,'#14b8a6'],['YORK',0.54,0.48,11,'#ec4899'],
+  ['LEEDS',0.51,0.50,10,'#b88940'],['SHEFFIELD',0.51,0.55,10,'#6b3d6e'],
+  ['HULL',0.58,0.50,8,'#c97b5a'],['LINCOLN',0.56,0.55,9,'#14b8a6'],
+  ['NOTTINGHAM',0.53,0.60,10,'#b88940'],['LEICESTER',0.53,0.62,9,'#ec4899'],
+  ['COVENTRY',0.52,0.66,9,'#7a1a2b'],['NORWICH',0.66,0.64,10,'#14b8a6'],
+  ['CAMBRIDGE',0.61,0.68,10,'#b88940'],['IPSWICH',0.68,0.68,9,'#6b3d6e'],
+  ['BRISTOL',0.46,0.74,11,'#c97b5a'],['BATH',0.48,0.76,8,'#ec4899'],
+  ['SWINDON',0.51,0.74,8,'#b88940'],['READING',0.57,0.74,8,'#7a1a2b'],
+  ['DOVER',0.70,0.78,8,'#14b8a6'],['CANTERBURY',0.68,0.75,9,'#6b3d6e'],
+  ['PORTSMOUTH',0.54,0.82,9,'#b88940'],['BOURNEMOUTH',0.50,0.82,9,'#c97b5a'],
+  ['EXETER',0.42,0.82,9,'#ec4899'],['PLYMOUTH',0.37,0.84,9,'#7a1a2b'],
+  ['CORNWALL',0.30,0.84,9,'#14b8a6'],['TRURO',0.28,0.86,7,'#b88940'],
+  ['SWANSEA',0.34,0.70,9,'#6b3d6e'],['NEWPORT',0.41,0.73,8,'#c97b5a'],
+  ['BANGOR',0.34,0.56,8,'#ec4899'],['WREXHAM',0.39,0.58,8,'#b88940'],
+  ['CHESTER',0.42,0.56,8,'#7a1a2b'],['STOKE',0.46,0.59,8,'#14b8a6'],
+  ['DERBY',0.51,0.58,8,'#b88940'],['PRESTON',0.44,0.51,8,'#c97b5a'],
+  ['LANCASTER',0.42,0.48,8,'#ec4899'],['MIDDLESBROUGH',0.54,0.44,8,'#6b3d6e'],
+  ['DURHAM',0.52,0.42,8,'#b88940'],['SUNDERLAND',0.55,0.40,8,'#14b8a6'],
+  ['CORK',0.16,0.65,10,'#7a1a2b'],['GALWAY',0.11,0.52,9,'#b88940'],
+  ['LIMERICK',0.14,0.60,9,'#14b8a6'],['DERRY',0.21,0.38,9,'#ec4899'],
+  ['WATERFORD',0.19,0.63,8,'#c97b5a'],['WEXFORD',0.22,0.62,8,'#6b3d6e'],
+  ['KILKENNY',0.18,0.60,8,'#b88940'],['SLIGO',0.15,0.44,8,'#14b8a6'],
+];
+
+// Simple UK/Ireland land test using ellipse+rect masks (fast; good enough for typographic stippling)
+function onLand(nx, ny){
+  // Scotland (irregular)
+  if(ny < 0.42){
+    const dx = (nx - 0.4), dy = (ny - 0.22);
+    if((dx*dx)/0.022 + (dy*dy)/0.03 < 1) return true;
+    // Shetland/Orkney
+    if(ny < 0.12 && nx > 0.42 && nx < 0.48) return true;
+    // Hebrides
+    if(nx < 0.3 && ny > 0.15 && ny < 0.32) return true;
+  }
+  // Northern England / Wales / England body
+  if(ny >= 0.38 && ny <= 0.86){
+    const dx = (nx - 0.52), dy = (ny - 0.62);
+    if((dx*dx)/0.026 + (dy*dy)/0.07 < 1) return true;
+    // Wales bulge left
+    const wx = (nx - 0.38), wy = (ny - 0.66);
+    if((wx*wx)/0.006 + (wy*wy)/0.015 < 1) return true;
+    // Cornwall tail
+    if(ny > 0.8 && nx > 0.26 && nx < 0.45) return true;
+    // Kent bulge right
+    if(ny > 0.72 && ny < 0.8 && nx > 0.65 && nx < 0.74) return true;
+  }
+  // Ireland
+  {
+    const dx = (nx - 0.18), dy = (ny - 0.52);
+    if((dx*dx)/0.012 + (dy*dy)/0.025 < 1) return true;
+  }
+  return false;
+}
+
+// Hovered city tracking
+let hoverCity = null;
+let mouse = {x:0, y:0};
+
+canvas.addEventListener('mousemove', e => {
+  const r = canvas.getBoundingClientRect();
+  mouse.x = e.clientX - r.left;
+  mouse.y = e.clientY - r.top;
+  updateHover();
+});
+canvas.addEventListener('click', e => {
+  if(hoverCity){
+    alert(`→ Entering ${hoverCity.name}\n(Full build will load the city scene here)`);
+  }
+});
+
+let art = {w:800, h:1000, ox:0, oy:0, scale:1};
+
+function layoutArt(){
+  const cw = canvas.clientWidth, ch = canvas.clientHeight;
+  const artRatio = 0.72; // w/h of UK art space
+  const topPad = 50; // HUD clearance so Scotland doesn't hide under it
+  const availH = ch - topPad;
+  let aw, ah;
+  if(cw/availH > artRatio){
+    ah = availH;
+    aw = ah * artRatio;
+  } else {
+    aw = cw;
+    ah = aw / artRatio;
+  }
+  art.w = aw;
+  art.h = ah;
+  art.ox = (cw - aw) / 2;
+  art.oy = topPad + (availH - ah) / 2;
+}
+
+function mapCoord(nx, ny){
+  return { x: art.ox + nx*art.w, y: art.oy + ny*art.h };
+}
+
+function updateHover(){
+  hoverCity = null;
+  let minD = 30;
+  CITY_ART.forEach(c => {
+    const p = mapCoord(c.x, c.y);
+    const d = Math.hypot(p.x - mouse.x, p.y - mouse.y);
+    if(d < minD + c.size){ minD = d; hoverCity = c; }
+  });
+  const prompt = document.getElementById('prompt');
+  if(hoverCity){
+    prompt.classList.add('show');
+    prompt.innerHTML = `<kbd>E</kbd>Enter ${hoverCity.name}`;
+    canvas.style.cursor = 'pointer';
+  } else {
+    prompt.classList.remove('show');
+    canvas.style.cursor = 'crosshair';
+  }
+  drawMap();
+}
+
+// Pre-generate stippled dots on land for texture
+let stippleCache = null;
+function generateStipple(){
+  const dots = [];
+  for(let i=0; i<2400; i++){
+    const nx = Math.random(), ny = Math.random();
+    if(onLand(nx, ny)){
+      dots.push({
+        nx, ny,
+        s: Math.random()*1.2 + 0.3,
+        a: Math.random()*0.3 + 0.1
+      });
+    }
+  }
+  stippleCache = dots;
+}
+generateStipple();
+
+// Typography items for map (city name at x,y, color, size)
+const ALL_LABELS = [
+  ...CITY_ART.map(c => ({...c, hero: c.hero || false})),
+  ...FILLER.map(f => ({name:f[0], x:f[1], y:f[2], size:f[3], color:f[4]}))
+];
+
+let pulsePhase = 0;
+
+function drawMap(){
+  const cw = canvas.clientWidth, ch = canvas.clientHeight;
+  layoutArt();
+  // Background
+  ctx.fillStyle = '#0a0706';
+  ctx.fillRect(0,0,cw,ch);
+
+  // Subtle vignette
+  const vg = ctx.createRadialGradient(cw/2, ch/2, 0, cw/2, ch/2, Math.max(cw,ch)*0.7);
+  vg.addColorStop(0, 'rgba(184,137,64,0.05)');
+  vg.addColorStop(0.6, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.7)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0,0,cw,ch);
+
+  // Coordinate grid (decorative, very subtle)
+  ctx.strokeStyle = 'rgba(184,137,64,0.04)';
+  ctx.lineWidth = 1;
+  for(let i=0; i<=10; i++){
+    const x = art.ox + (i/10)*art.w;
+    ctx.beginPath(); ctx.moveTo(x, art.oy); ctx.lineTo(x, art.oy+art.h); ctx.stroke();
+    const y = art.oy + (i/10)*art.h;
+    ctx.beginPath(); ctx.moveTo(art.ox, y); ctx.lineTo(art.ox+art.w, y); ctx.stroke();
+  }
+
+  // Stippled land (texture behind type)
+  stippleCache.forEach(d => {
+    const p = mapCoord(d.nx, d.ny);
+    ctx.fillStyle = `rgba(184,137,64,${d.a*0.4})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, d.s, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  // All city/town labels
+  ALL_LABELS.forEach(lbl => {
+    const p = mapCoord(lbl.x, lbl.y);
+    const isHover = hoverCity && hoverCity.name === lbl.name;
+    const isHero = lbl.hero;
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const size = lbl.size * (art.w / 800);
+
+    // Hover glow
+    if(isHover){
+      const glowR = size * 3;
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowR);
+      glow.addColorStop(0, `${lbl.color}80`);
+      glow.addColorStop(0.5, `${lbl.color}20`);
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(p.x, p.y, glowR, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Font choice
+    if(isHero){
+      ctx.font = `900 ${size}px 'Archivo Black', sans-serif`;
+    } else if(lbl.hero !== undefined){
+      ctx.font = `700 ${size}px 'Inter', sans-serif`;
+    } else {
+      ctx.font = `600 ${size}px 'Inter', sans-serif`;
+    }
+
+    ctx.fillStyle = isHover ? '#ffffff' : lbl.color;
+    if(isHover){
+      ctx.shadowColor = lbl.color;
+      ctx.shadowBlur = 16;
+    }
+    ctx.fillText(lbl.name, p.x, p.y);
+    ctx.restore();
+
+    // Major cities get a small dot marker
+    if(lbl.hero !== undefined){
+      ctx.fillStyle = isHover ? '#ffffff' : lbl.color;
+      ctx.beginPath();
+      const dotR = (isHero ? 4 : 2.5) * (isHover ? 1.5 : 1);
+      ctx.arc(p.x, p.y + size * 0.8, dotR, 0, Math.PI*2);
+      ctx.fill();
+      if(isHover){
+        ctx.strokeStyle = lbl.color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y + size * 0.8, dotR + 4 + Math.sin(pulsePhase*0.12)*2, 0, Math.PI*2);
+        ctx.stroke();
+      }
+    }
+  });
+
+  // Compass now rendered as SVG in HUD (top right)
+}
+
+function drawCompass(g, x, y, r){
+  g.save();
+  g.strokeStyle = 'rgba(184,137,64,0.5)';
+  g.fillStyle = 'rgba(184,137,64,0.9)';
+  g.lineWidth = 1;
+  g.beginPath(); g.arc(x, y, r, 0, Math.PI*2); g.stroke();
+  g.beginPath(); g.arc(x, y, r-6, 0, Math.PI*2); g.stroke();
+  // North triangle
+  g.beginPath();
+  g.moveTo(x, y-r+2); g.lineTo(x-3, y); g.lineTo(x+3, y); g.closePath();
+  g.fill();
+  g.strokeStyle = 'rgba(241,234,217,0.3)';
+  g.beginPath();
+  g.moveTo(x, y+r-2); g.lineTo(x-2, y); g.lineTo(x+2, y); g.closePath();
+  g.stroke();
+  g.beginPath();
+  g.moveTo(x-r+2, y); g.lineTo(x, y-2); g.lineTo(x, y+2); g.closePath();
+  g.stroke();
+  g.beginPath();
+  g.moveTo(x+r-2, y); g.lineTo(x, y-2); g.lineTo(x, y+2); g.closePath();
+  g.stroke();
+  g.fillStyle = 'rgba(184,137,64,0.7)';
+  g.font = "700 9px 'JetBrains Mono', monospace";
+  g.textAlign = 'center';
+  g.fillText('N', x, y - r - 6);
+  g.restore();
+}
+
+// Animate pulse
+function animate(){
+  pulsePhase++;
+  if(onMap && hoverCity) drawMap();
+  requestAnimationFrame(animate);
+}
+animate();
+
+// Start on login
+window.addEventListener('load', () => { resizeMap(); });
+</script>
+</body>
+</html>
