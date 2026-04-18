@@ -1,0 +1,3505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>BritChat · BritWorld</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,700&family=Italiana&family=Inter:wght@300;400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bone:#f1ead9;
+  --bone-dim:#d9d1bc;
+  --ink:#0a0706;
+  --ink-2:#15110f;
+  --ink-3:#1f1a16;
+  --oxblood:#7a1a2b;
+  --oxblood-light:#a32b3d;
+  --emerald:#0c3b2e;
+  --emerald-light:#1a6b52;
+  --gold:#b88940;
+  --gold-light:#d4a558;
+  --gold-bright:#e8bd68;
+  --teal-neon:#14b8a6;
+  --amethyst:#6b3d6e;
+  --coral:#c97b5a;
+  --pink-neon:#ec4899;
+  --display:'Playfair Display', serif;
+  --italiana:'Italiana', serif;
+  --body:'Inter', sans-serif;
+  --mono:'JetBrains Mono', monospace;
+  --black-display:'Archivo Black', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--ink);color:var(--bone);
+  font-family:var(--body);user-select:none;touch-action:none}
+
+/* Loading screen */
+#loading{position:fixed;inset:0;z-index:9998;display:flex;align-items:center;
+  justify-content:center;flex-direction:column;gap:18px;
+  background:radial-gradient(ellipse at center, var(--ink-2) 0%, var(--ink) 80%)}
+.load-logo{font-family:var(--italiana);font-size:54px;color:var(--gold);letter-spacing:2px;
+  text-shadow:0 4px 30px rgba(184,137,64,.3)}
+.load-dots{font-family:var(--mono);color:var(--bone);letter-spacing:10px;font-size:10px;
+  animation:loadPulse 1.2s ease-in-out infinite}
+@keyframes loadPulse{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* Film grain overlay across everything */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.08;
+  background-image:
+    repeating-radial-gradient(circle at 0 0, rgba(255,255,255,.05) 0, rgba(255,255,255,.05) 1px, transparent 1px, transparent 3px),
+    repeating-linear-gradient(45deg, rgba(0,0,0,.1) 0 1px, transparent 1px 2px);
+  mix-blend-mode:overlay;animation:grain .4s steps(3) infinite;
+}
+@keyframes grain{
+  0%{transform:translate(0,0)}
+  33%{transform:translate(-1px,1px)}
+  66%{transform:translate(1px,-1px)}
+  100%{transform:translate(0,0)}
+}
+
+/* ═══════════════════ LOGIN ═══════════════════ */
+#login{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:30px 20px;overflow-y:auto;
+  background:
+    radial-gradient(ellipse 60% 40% at 30% 20%, rgba(184,137,64,.08) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 60% at 80% 80%, rgba(122,26,43,.12) 0%, transparent 50%),
+    radial-gradient(ellipse at center, var(--ink-3) 0%, var(--ink) 80%);
+}
+
+/* Corner ornaments */
+.corner{position:absolute;width:60px;height:60px;color:var(--gold);opacity:.4;pointer-events:none}
+.corner.tl{top:24px;left:24px;border-top:1px solid currentColor;border-left:1px solid currentColor}
+.corner.tr{top:24px;right:24px;border-top:1px solid currentColor;border-right:1px solid currentColor}
+.corner.bl{bottom:24px;left:24px;border-bottom:1px solid currentColor;border-left:1px solid currentColor}
+.corner.br{bottom:24px;right:24px;border-bottom:1px solid currentColor;border-right:1px solid currentColor}
+.corner::before{content:'◆';position:absolute;font-size:8px;
+  top:-5px;left:-5px;background:var(--ink);padding:2px 4px}
+.corner.tr::before{left:auto;right:-5px}
+.corner.bl::before{top:auto;bottom:-5px}
+.corner.br::before{top:auto;bottom:-5px;left:auto;right:-5px}
+
+/* Title block */
+.title-block{text-align:center;position:relative;z-index:2;margin-bottom:28px;max-width:560px}
+.overline{font-family:var(--mono);font-size:10px;color:var(--gold);
+  letter-spacing:6px;text-transform:uppercase;margin-bottom:14px;opacity:.85;
+  display:flex;align-items:center;justify-content:center;gap:14px}
+.overline .dash{height:1px;flex:1;max-width:80px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+
+.brand{font-family:var(--italiana);font-size:clamp(34px,7.5vw,60px);line-height:1;
+  color:var(--bone);letter-spacing:1px;font-weight:400;position:relative;
+  text-shadow:0 4px 30px rgba(184,137,64,.2);margin-top:22px;white-space:nowrap}
+.brand .world{color:var(--gold);font-style:italic;position:relative;display:inline-block}
+.brand .world::before, .brand .world::after{
+  content:'◆';position:absolute;top:50%;transform:translateY(-55%);
+  font-family:var(--mono);font-size:10px;color:var(--gold);opacity:.6}
+.brand .world::before{right:calc(100% + 14px)}
+.brand .world::after{left:calc(100% + 14px)}
+
+/* UK flag */
+.flag-wrap{display:flex;justify-content:center;margin-top:4px;position:relative}
+.flag-wrap::before, .flag-wrap::after{
+  content:'';position:absolute;top:50%;width:60px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.6}
+.flag-wrap::before{right:calc(50% + 90px)}
+.flag-wrap::after{left:calc(50% + 90px)}
+.uk-flag{width:160px;height:80px;display:block;
+  filter:drop-shadow(0 6px 24px rgba(163,43,61,.3)) drop-shadow(0 0 1px rgba(184,137,64,.4));
+  border:1px solid rgba(184,137,64,.25);
+  background:var(--ink-2)}
+
+/* Login card */
+.card{width:100%;max-width:520px;
+  background:linear-gradient(180deg,var(--ink-2) 0%,var(--ink) 100%);
+  border:1px solid rgba(184,137,64,.3);
+  padding:32px 30px 28px;position:relative;z-index:2;
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.7),
+    inset 0 1px 0 rgba(255,255,255,.03);
+}
+.card::before{content:'';position:absolute;inset:6px;border:1px solid rgba(184,137,64,.15);pointer-events:none}
+.card::after{content:'◆  ◆  ◆';position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+  color:var(--gold);font-size:10px;letter-spacing:8px;background:var(--ink);padding:0 12px}
+
+.label{font-family:var(--mono);font-size:9px;color:var(--gold-light);
+  letter-spacing:3px;text-transform:uppercase;display:block;margin-bottom:10px;font-weight:700;
+  display:flex;justify-content:space-between;align-items:center}
+.label .count{opacity:.5;font-size:8px;letter-spacing:1.5px}
+
+#nick{width:100%;padding:14px 0;background:transparent;
+  border:none;border-bottom:1px solid rgba(184,137,64,.4);
+  color:var(--bone);font-family:var(--display);font-size:26px;font-style:italic;
+  outline:none;transition:all .3s;margin-bottom:26px;font-weight:400}
+#nick:focus{border-bottom-color:var(--gold);border-bottom-width:2px}
+#nick::placeholder{color:rgba(241,234,217,.25);font-style:italic}
+
+/* Avatar tabs */
+.tabs{display:flex;gap:0;margin-bottom:18px;border-bottom:1px solid rgba(184,137,64,.2)}
+.tab{flex:1;padding:12px 6px;background:transparent;border:none;
+  font-family:var(--mono);font-size:9px;color:rgba(241,234,217,.5);letter-spacing:2.5px;
+  text-transform:uppercase;cursor:pointer;transition:all .2s;
+  border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:700}
+.tab:hover{color:var(--bone)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* Avatar grid */
+.av-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:22px}
+.av{aspect-ratio:1;background:var(--ink-3);cursor:pointer;position:relative;overflow:hidden;
+  border:1px solid rgba(184,137,64,.15);transition:all .25s ease;display:flex;align-items:center;justify-content:center}
+.av:hover{border-color:rgba(184,137,64,.6);transform:translateY(-2px)}
+.av.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 8px 20px rgba(184,137,64,.3)}
+.av.sel::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(184,137,64,.15) 100%);pointer-events:none}
+.av svg{width:100%;height:100%;display:block}
+.av-name{position:absolute;bottom:4px;left:4px;right:4px;
+  font-family:var(--mono);font-size:7px;text-align:center;letter-spacing:1px;
+  color:var(--bone-dim);text-transform:uppercase;font-weight:700;
+  background:rgba(10,7,6,.85);padding:2px 0;opacity:0;transition:opacity .2s}
+.av:hover .av-name, .av.sel .av-name{opacity:1}
+
+/* Photo upload panel */
+.photo-panel{display:none;padding:8px 0 12px;text-align:center;margin-bottom:22px}
+.photo-panel.active{display:block}
+.av-grid.inactive{display:none}
+.photo-preview{width:120px;height:120px;margin:0 auto 14px;
+  background:var(--ink-3);border:1px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  overflow:hidden;position:relative;transition:all .25s}
+.photo-preview:hover{box-shadow:0 0 0 2px var(--gold),0 8px 20px rgba(184,137,64,.2)}
+.photo-preview img{width:100%;height:100%;object-fit:cover}
+.photo-placeholder{color:var(--gold);font-family:var(--mono);font-size:8px;
+  letter-spacing:2px;text-transform:uppercase;text-align:center;padding:10px}
+.photo-icon{font-size:28px;color:var(--gold);margin-bottom:8px;opacity:.6}
+.photo-hint{font-family:var(--mono);font-size:8px;color:rgba(241,234,217,.4);
+  letter-spacing:1.5px;text-align:center;line-height:1.8}
+#photo-input{display:none}
+
+/* Optional profile extras */
+.extras{margin-top:20px;border-top:1px solid rgba(184,137,64,.15);padding-top:16px}
+.extras summary{cursor:pointer;font-family:var(--mono);font-size:9px;
+  color:var(--gold);letter-spacing:2.5px;text-transform:uppercase;
+  font-weight:700;list-style:none;padding:8px 4px;user-select:none;
+  display:flex;align-items:center;justify-content:space-between;transition:color .2s}
+.extras summary::marker, .extras summary::-webkit-details-marker{display:none}
+.extras summary::after{content:'▾';font-size:12px;transition:transform .2s}
+.extras[open] summary::after{transform:rotate(180deg)}
+.extras summary:hover{color:var(--gold-bright)}
+.extras-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.extras-field{display:flex;flex-direction:column;gap:6px}
+.extras-field.wide{grid-column:1/-1}
+.extras-field label{font-family:var(--mono);font-size:8px;color:var(--gold-light);
+  letter-spacing:2px;text-transform:uppercase;opacity:.8}
+.extras-field input, .extras-field select{
+  padding:10px 12px;background:var(--ink-3);
+  border:1px solid rgba(184,137,64,.25);color:var(--bone);
+  font-family:var(--body);font-size:13px;outline:none;transition:border-color .2s}
+.extras-field input:focus, .extras-field select:focus{border-color:var(--gold)}
+.extras-field input::placeholder{color:rgba(241,234,217,.3)}
+
+.colour-picker{display:flex;gap:6px;flex-wrap:wrap}
+.colour-swatch{width:26px;height:26px;border:2px solid transparent;cursor:pointer;
+  border-radius:3px;transition:all .15s}
+.colour-swatch:hover{transform:scale(1.1)}
+.colour-swatch.selected{border-color:var(--bone);box-shadow:0 0 0 1px var(--gold)}
+
+/* Enter button */
+.enter{width:100%;padding:18px;background:transparent;
+  border:1px solid var(--gold);color:var(--gold);font-family:var(--mono);font-size:11px;
+  font-weight:700;letter-spacing:5px;text-transform:uppercase;cursor:pointer;
+  transition:all .3s cubic-bezier(.4,.0,.2,1);position:relative;overflow:hidden}
+.enter::before{content:'';position:absolute;inset:0;background:var(--gold);
+  transform:translateY(101%);transition:transform .4s cubic-bezier(.4,.0,.2,1);z-index:-1}
+.enter:hover{color:var(--ink);letter-spacing:7px}
+.enter:hover::before{transform:translateY(0)}
+.enter span{position:relative;z-index:1}
+
+.footer-note{font-family:var(--mono);font-size:8px;color:rgba(241,234,217,.35);
+  letter-spacing:2px;margin-top:24px;text-align:center;line-height:1.8;
+  position:relative;z-index:2;text-transform:uppercase}
+.footer-note::before, .footer-note::after{content:'◆';color:var(--gold);margin:0 8px;opacity:.6}
+
+/* ═══════════════════ WORLD / MAP ═══════════════════ */
+#world{position:fixed;inset:0;display:none;flex-direction:column;z-index:1;background:var(--ink)}
+#world.active{display:flex}
+
+.hud{position:absolute;top:0;left:0;right:0;z-index:50;display:flex;
+  justify-content:space-between;align-items:center;padding:16px 22px;
+  background:linear-gradient(180deg,rgba(0,0,0,.6),transparent 100%);pointer-events:none}
+.hud-place-block{pointer-events:auto;max-width:calc(100vw - 180px);min-width:0}
+.hud-over{font-family:var(--mono);font-size:10px;color:var(--gold);
+  letter-spacing:3px;text-transform:uppercase;font-weight:700;opacity:.9;
+  text-shadow:0 2px 8px rgba(0,0,0,.9);line-height:1.5;
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical}
+@media (max-width:480px){
+  .hud-over{letter-spacing:2px;font-size:9px}
+  .hud-place-block{max-width:calc(100vw - 150px)}
+}
+
+.hud-right{display:flex;gap:8px;pointer-events:auto;align-items:center}
+
+/* Decorative compass, left side of map, aligned with Shetland (top) */
+.side-compass{position:absolute;left:14px;top:12%;
+  width:58px;height:58px;z-index:45;pointer-events:none;opacity:.7;
+  filter:drop-shadow(0 4px 16px rgba(0,0,0,.8))}
+.side-compass::before{content:'';position:absolute;inset:-8px;
+  background:radial-gradient(circle,rgba(10,7,6,.6),transparent 70%);z-index:-1}
+/* Hide compass if very narrow viewport to avoid crowding cities */
+@media (max-width:380px){
+  .side-compass{display:none}
+}
+.hud-badge{position:absolute;top:100px;right:18px;z-index:51;
+  font-family:var(--mono);font-size:9px;color:var(--bone);font-weight:700;
+  letter-spacing:2px;padding:8px 12px;background:rgba(10,7,6,.9);
+  border:1px solid rgba(184,137,64,.4);text-transform:uppercase;white-space:nowrap}
+.hud-badge .dot{display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--teal-neon);margin-right:6px;box-shadow:0 0 8px var(--teal-neon);
+  animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.hud-btn{width:36px;height:36px;background:rgba(10,7,6,.85);
+  border:1px solid rgba(184,137,64,.4);color:var(--bone);
+  font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);transition:all .2s}
+.hud-btn:hover{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+
+#map-wrap{position:absolute;inset:0;overflow:hidden;background:var(--ink)}
+#map-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+
+/* Decorative bottom strip */
+.bottom-strip{position:absolute;bottom:0;left:0;right:0;height:80px;z-index:40;
+  background:linear-gradient(0deg,rgba(0,0,0,.9),transparent 100%);pointer-events:none;
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:16px}
+.bottom-strip .legend{font-family:var(--mono);font-size:9px;color:var(--gold-light);
+  letter-spacing:4px;text-transform:uppercase;opacity:.7;text-align:center}
+
+/* Pulse prompt — only shown on map, positioned near London/current city */
+.prompt-hint{position:absolute;bottom:72px;left:65%;transform:translateX(-50%);
+  z-index:45;font-family:var(--mono);font-size:10px;color:var(--gold);
+  letter-spacing:3px;text-transform:uppercase;font-weight:700;
+  padding:12px 22px;background:rgba(10,7,6,.95);border:1px solid var(--gold);
+  cursor:pointer;opacity:0;transition:opacity .25s;
+  pointer-events:none;user-select:none}
+.prompt-hint.show{opacity:1;pointer-events:auto;animation:hintPulse 1.6s ease-in-out infinite}
+.prompt-hint:hover, .prompt-hint:active{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.prompt-hint:hover kbd, .prompt-hint:active kbd{background:var(--ink);color:var(--gold)}
+@keyframes hintPulse{0%,100%{box-shadow:0 0 0 0 rgba(184,137,64,.5)}50%{box-shadow:0 0 0 14px rgba(184,137,64,0)}}
+.prompt-hint kbd{display:inline-block;background:var(--gold);color:var(--ink);
+  padding:3px 7px;margin-right:8px;font-size:9px;letter-spacing:0;font-family:var(--mono);
+  transition:all .2s}
+
+/* Back to map button — top left (doesn't collide with HUD title) */
+.back-btn{position:absolute;top:58px;left:14px;z-index:52;
+  background:rgba(10,7,6,.92);border:1px solid var(--gold);color:var(--gold);
+  font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:8px 14px;
+  cursor:pointer;text-transform:uppercase;font-weight:700;display:none;
+  transition:all .2s}
+.back-btn.show{display:block}
+.back-btn:hover{background:var(--gold);color:var(--ink)}
+
+/* Travel dropdown */
+.travel-btn{position:absolute;top:62px;right:18px;z-index:51;
+  background:rgba(10,7,6,.9);border:1px solid rgba(184,137,64,.5);color:var(--bone);
+  font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:8px 12px;
+  cursor:pointer;text-transform:uppercase;font-weight:700;transition:all .2s}
+.travel-btn:hover{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.travel-panel{position:absolute;top:140px;right:18px;z-index:60;
+  background:var(--ink-2);border:1px solid var(--gold);
+  min-width:180px;display:none;max-height:60vh;overflow-y:auto}
+.travel-panel.show{display:block}
+.travel-title{font-family:var(--mono);font-size:9px;color:var(--gold);
+  letter-spacing:3px;padding:10px 14px;border-bottom:1px solid rgba(184,137,64,.3);
+  text-transform:uppercase;font-weight:700}
+.travel-item{padding:10px 14px;color:var(--bone-dim);font-family:var(--body);
+  font-size:13px;cursor:pointer;transition:all .15s;
+  border-bottom:1px solid rgba(184,137,64,.08);display:flex;align-items:center;gap:8px}
+.travel-item:hover{background:rgba(184,137,64,.1);color:var(--gold)}
+.travel-item .marker{color:var(--oxblood-light);font-size:10px}
+
+/* Chat bar */
+.chat-bar{position:absolute;bottom:0;left:0;right:0;z-index:40;
+  display:flex;gap:0;padding:12px 14px;
+  background:linear-gradient(0deg,rgba(10,7,6,.95),transparent 100%)}
+#chat-input{flex:1;padding:12px 14px;background:var(--ink-3);
+  border:1px solid rgba(184,137,64,.3);color:var(--bone);
+  font-family:var(--display);font-style:italic;font-size:16px;outline:none;transition:all .2s}
+#chat-input:focus{border-color:var(--gold);background:var(--ink-2)}
+#chat-input::placeholder{color:rgba(241,234,217,.3);font-style:italic}
+.send-btn{padding:0 22px;background:var(--gold);border:1px solid var(--gold);
+  color:var(--ink);font-family:var(--mono);font-size:10px;letter-spacing:3px;
+  text-transform:uppercase;cursor:pointer;font-weight:700;transition:all .2s}
+.send-btn:hover{background:var(--gold-bright)}
+
+/* Joystick (mobile) */
+#joy{position:absolute;bottom:82px;left:18px;width:100px;height:100px;z-index:35;
+  touch-action:none;display:none}
+.joy-base{position:absolute;inset:0;border:2px solid var(--gold);background:rgba(10,7,6,.5);
+  border-radius:50%;box-shadow:0 0 20px rgba(0,0,0,.6)}
+.joy-stick{position:absolute;left:40px;top:40px;width:20px;height:20px;
+  background:var(--gold);border-radius:50%;
+  box-shadow:0 0 15px rgba(184,137,64,.8),inset 0 1px 2px rgba(255,255,255,.3);
+  transition:left .05s linear, top .05s linear}
+@media (pointer:coarse){ #joy{display:block} #desktop-hint{display:none} }
+
+/* Desktop control hint */
+.desktop-hint{position:absolute;bottom:86px;left:18px;z-index:35;
+  font-family:var(--mono);font-size:9px;color:var(--bone-dim);letter-spacing:1.5px;
+  background:rgba(10,7,6,.75);padding:8px 12px;border:1px solid rgba(184,137,64,.2);
+  opacity:.7}
+.desktop-hint kbd{display:inline-block;background:var(--gold);color:var(--ink);
+  padding:1px 5px;margin:0 3px;font-size:8px;font-family:var(--mono);font-weight:700}
+
+/* Toast */
+.toast{position:absolute;top:80px;left:50%;transform:translateX(-50%);z-index:70;
+  padding:12px 22px;background:rgba(10,7,6,.95);border:1px solid var(--gold);
+  color:var(--gold);font-family:var(--mono);font-size:10px;letter-spacing:3px;
+  text-transform:uppercase;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* Profile popover */
+.profile-pop{position:absolute;z-index:80;min-width:200px;max-width:260px;
+  background:var(--ink-2);border:1px solid var(--gold);padding:12px;
+  box-shadow:0 20px 50px rgba(0,0,0,.8);display:none;pointer-events:none}
+.profile-pop.show{display:block}
+.profile-pop::before{content:'';position:absolute;inset:3px;border:1px solid rgba(184,137,64,.2);pointer-events:none}
+.pp-head{display:flex;gap:10px;align-items:center}
+.pp-avatar{width:44px;height:44px;border:1px solid var(--gold);
+  overflow:hidden;flex-shrink:0;position:relative}
+.pp-avatar svg, .pp-avatar img{width:100%;height:100%;display:block;object-fit:cover}
+.pp-main{flex:1;min-width:0}
+.pp-nick{font-family:var(--italiana);font-size:20px;color:var(--gold);line-height:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pp-meta{font-family:var(--mono);font-size:9px;color:var(--bone-dim);
+  letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+.pp-meta .dot-sep{color:var(--gold);margin:0 5px;opacity:.5}
+.pp-loc{margin-top:8px;padding-top:8px;border-top:1px solid rgba(184,137,64,.15);
+  font-family:var(--display);font-style:italic;font-size:12px;color:var(--bone-dim)}
+.pp-loc:empty{display:none}
+.pp-loc::before{content:'◆ ';color:var(--gold);opacity:.7;margin-right:4px}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="load-logo">BritChat</div>
+  <div class="load-dots">• • •</div>
+</div>
+
+<script>
+// Safety: hide loading after 1.5s even if JS module fails
+setTimeout(() => { const l = document.getElementById('loading'); if(l) l.style.display = 'none'; }, 1500);
+window.addEventListener('error', (e) => console.error('[BritWorld GLOBAL]', e.message, e.filename+':'+e.lineno));
+window.addEventListener('unhandledrejection', (e) => console.error('[BritWorld PROMISE]', e.reason));
+</script>
+
+<!-- ═════════ LOGIN ═════════ -->
+<div id="login">
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <div class="title-block">
+    <div class="overline">
+      <span class="dash"></span>
+      <span>Est. 2026 · The British Isles</span>
+      <span class="dash"></span>
+    </div>
+    <div class="flag-wrap">
+      <svg class="uk-flag" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg" aria-label="UK Flag">
+        <defs>
+          <linearGradient id="flagInk" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1f1a16"/>
+            <stop offset="100%" stop-color="#0a0706"/>
+          </linearGradient>
+          <linearGradient id="flagGold" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#e8bd68"/>
+            <stop offset="50%" stop-color="#b88940"/>
+            <stop offset="100%" stop-color="#8a6428"/>
+          </linearGradient>
+          <linearGradient id="flagBlood" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#a32b3d"/>
+            <stop offset="100%" stop-color="#5a0e1a"/>
+          </linearGradient>
+        </defs>
+        <!-- dark ink base -->
+        <rect width="60" height="30" fill="url(#flagInk)"/>
+        <!-- gold saltire (diagonal) outer -->
+        <path d="M0 0 L60 30 M60 0 L0 30" stroke="url(#flagGold)" stroke-width="5.5" opacity=".85"/>
+        <!-- oxblood saltire inner -->
+        <path d="M0 0 L60 30 M60 0 L0 30" stroke="url(#flagBlood)" stroke-width="2.2"/>
+        <!-- central cross gold outer -->
+        <rect x="0" y="11" width="60" height="8" fill="url(#flagGold)" opacity=".9"/>
+        <rect x="25" y="0" width="10" height="30" fill="url(#flagGold)" opacity=".9"/>
+        <!-- central cross oxblood inner -->
+        <rect x="0" y="13" width="60" height="4" fill="url(#flagBlood)"/>
+        <rect x="27" y="0" width="6" height="30" fill="url(#flagBlood)"/>
+        <!-- subtle grain overlay -->
+        <rect width="60" height="30" fill="url(#flagInk)" opacity=".15"/>
+      </svg>
+    </div>
+    <h1 class="brand">Welcome to <span class="world">BritChat</span></h1>
+  </div>
+
+  <div class="card">
+    <div class="label">
+      <span>◦ 01 · Your Name</span>
+      <span class="count">Max 16</span>
+    </div>
+    <input id="nick" type="text" placeholder="What do we call you?" maxlength="16" autocomplete="off">
+
+    <div class="label"><span>◦ 02 · Choose Your Look</span></div>
+    <div class="tabs">
+      <button class="tab active" id="tab-silhouettes" type="button">◆ Silhouettes</button>
+      <button class="tab" id="tab-photo" type="button">◇ Your Photo</button>
+    </div>
+    <div class="av-grid" id="av-grid"></div>
+    <div class="photo-panel" id="photo-panel">
+      <div class="photo-preview" id="photo-preview">
+        <div class="photo-placeholder">
+          <div class="photo-icon">◈</div>
+          <div>Tap to upload your picture</div>
+        </div>
+      </div>
+      <input type="file" id="photo-input" accept="image/*">
+      <div class="photo-hint">Best as a close-up, centred face. Your photo will become your avatar.</div>
+    </div>
+
+    <button class="enter" id="enter-btn" type="button"><span>⟡ Enter BritChat ⟡</span></button>
+
+    <details class="extras">
+      <summary>◆ Optional Profile · Age · Sex · Location · Chat Colour</summary>
+      <div class="extras-grid">
+        <div class="extras-field">
+          <label>Age</label>
+          <input id="profile-age" type="number" min="18" max="99" placeholder="18+" autocomplete="off">
+        </div>
+        <div class="extras-field">
+          <label>Sex</label>
+          <select id="profile-sex">
+            <option value="">—</option>
+            <option value="F">Female</option>
+            <option value="M">Male</option>
+            <option value="NB">Non-binary</option>
+            <option value="Prefer">Prefer not to say</option>
+          </select>
+        </div>
+        <div class="extras-field wide">
+          <label>Location</label>
+          <input id="profile-location" type="text" maxlength="30" placeholder="e.g. Brighton, UK" autocomplete="off">
+        </div>
+        <div class="extras-field wide">
+          <label>Chat Colour</label>
+          <div class="colour-picker" id="colour-picker"></div>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="footer-note">18+ · Be Kind · Mind Your Manners · Enjoy Yourself</div>
+</div>
+
+<!-- ═════════ WORLD ═════════ -->
+<div id="world">
+  <div class="hud">
+    <div class="hud-place-block">
+      <div class="hud-over" id="hud-title">◆ Explore the UK Chat Rooms on BritChat ◆</div>
+    </div>
+    <div class="hud-right">
+      <button class="hud-btn" id="help-btn" type="button">?</button>
+      <button class="hud-btn" id="leave-btn" type="button">×</button>
+    </div>
+  </div>
+
+  <button class="back-btn" id="back-btn" type="button">← Back to Map</button>
+  <button class="travel-btn" id="travel-btn" type="button">Travel ▾</button>
+  <div class="hud-badge" id="online-count"><span class="dot"></span>1 ONLINE</div>
+  <div class="travel-panel" id="travel-panel"></div>
+
+  <div id="map-wrap">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <div class="prompt-hint" id="prompt"><kbd>E</kbd>Enter London</div>
+
+  <div class="desktop-hint" id="desktop-hint">
+    <kbd>WASD</kbd> walk · <kbd>E</kbd> enter · <kbd>↵</kbd> chat · <kbd>M</kbd> map
+  </div>
+
+  <div id="joy"><div class="joy-base"></div><div class="joy-stick" id="joy-stick"></div></div>
+
+  <div class="chat-bar">
+    <input id="chat-input" type="text" placeholder="Say something..." maxlength="140" autocomplete="off">
+    <button class="send-btn" id="send-btn" type="button">Send</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="profile-pop" id="profile-pop">
+    <div class="pp-head">
+      <div class="pp-avatar" id="pp-avatar"></div>
+      <div class="pp-main">
+        <div class="pp-nick" id="pp-nick"></div>
+        <div class="pp-meta" id="pp-meta"></div>
+      </div>
+    </div>
+    <div class="pp-loc" id="pp-loc"></div>
+  </div>
+</div>
+
+<script type="module">
+// Hide loading immediately
+const loadingEl = document.getElementById('loading');
+if(loadingEl) loadingEl.style.display = 'none';
+
+// ═══════════════ FIREBASE (wrapped safely) ═══════════════
+let fbOK = false;
+let db = null;
+let fbRef, fbOnValue, fbOnDisconnect, fbSet, fbRemove, fbPush, fbQuery, fbLimitToLast, fbServerTimestamp;
+try {
+  const appMod = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+  const dbMod  = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+  const app = appMod.initializeApp({ databaseURL: "https://britchat-6faa5-default-rtdb.firebaseio.com" });
+  db = dbMod.getDatabase(app);
+  fbRef = dbMod.ref; fbOnValue = dbMod.onValue; fbOnDisconnect = dbMod.onDisconnect;
+  fbSet = dbMod.set; fbRemove = dbMod.remove; fbPush = dbMod.push;
+  fbQuery = dbMod.query; fbLimitToLast = dbMod.limitToLast; fbServerTimestamp = dbMod.serverTimestamp;
+  fbOK = true;
+  console.log('[BritChat] Firebase ready');
+} catch(err) {
+  console.error('[BritChat] Firebase unavailable — running offline:', err);
+}
+
+// ═══════════════ AVATARS ═══════════════
+// 16 avatars - better balanced male/female, clearer in small circles
+const AVATARS = [
+  // Female
+  {id:'redhead_glam',   name:'Ruby',     gender:'f', bg:'#7a1a2b', fig:'redhead_glam'},
+  {id:'blonde_pinup',   name:'Blondie',  gender:'f', bg:'#b88940', fig:'blonde_pinup'},
+  {id:'brunette_mod',   name:'Coco',     gender:'f', bg:'#0c3b2e', fig:'brunette_mod'},
+  {id:'pink_punk',      name:'Neon',     gender:'f', bg:'#1f1a16', fig:'pink_punk'},
+  {id:'raven_goth',     name:'Morrigan', gender:'f', bg:'#6b3d6e', fig:'raven_goth'},
+  {id:'silver_fox_f',   name:'Vivienne', gender:'f', bg:'#14b8a6', fig:'silver_fox_f'},
+  {id:'flapper',        name:'Gatsby',   gender:'f', bg:'#c97b5a', fig:'flapper'},
+  {id:'curl_sultry',    name:'Velvet',   gender:'f', bg:'#ec4899', fig:'curl_sultry'},
+  // Male
+  {id:'dapper_man',     name:'Archie',   gender:'m', bg:'#0c3b2e', fig:'dapper_man'},
+  {id:'leather_man',    name:'Jet',      gender:'m', bg:'#0a0706', fig:'leather_man'},
+  {id:'hipster_beard',  name:'Oscar',    gender:'m', bg:'#b88940', fig:'hipster_beard'},
+  {id:'silver_fox_m',   name:'Reggie',   gender:'m', bg:'#1f1a16', fig:'silver_fox_m'},
+  {id:'blonde_surfer',  name:'Finn',     gender:'m', bg:'#14b8a6', fig:'blonde_surfer'},
+  {id:'bad_boy',        name:'Kai',      gender:'m', bg:'#7a1a2b', fig:'bad_boy'},
+  {id:'mustache',       name:'Monty',    gender:'m', bg:'#c97b5a', fig:'mustache'},
+  {id:'smoulder',       name:'Dorian',   gender:'m', bg:'#6b3d6e', fig:'smoulder'},
+];
+
+// Each avatar rendered at larger scale, more expressive features
+function avatarSVG(bg, fig){
+  // All avatars use a filled circle-crop style with face + distinctive hair/hat
+  const figs = {
+    // FEMALE
+    redhead_glam: `
+      <!-- Red hair cascading -->
+      <path d="M50 32 Q28 30 22 55 L22 82 Q30 75 35 78 L35 82 Q32 90 28 96 L72 96 Q68 90 65 82 L65 78 Q70 75 78 82 L78 55 Q72 30 50 32 Z" fill="#c21e2a"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="52" rx="17" ry="20" fill="#f3d4b5"/>
+      <!-- Bangs -->
+      <path d="M33 40 Q50 28 67 40 Q60 44 50 44 Q40 44 33 40 Z" fill="#a01820"/>
+      <!-- Eyes (smoky) -->
+      <ellipse cx="43" cy="52" rx="2.2" ry="1" fill="#2a1a10"/>
+      <ellipse cx="57" cy="52" rx="2.2" ry="1" fill="#2a1a10"/>
+      <path d="M40 48 Q43 46 46 48 M54 48 Q57 46 60 48" stroke="#2a1a10" stroke-width="1" fill="none"/>
+      <!-- Lips -->
+      <path d="M46 62 Q50 64 54 62 Q52 66 50 66 Q48 66 46 62 Z" fill="#c21e2a"/>
+      <!-- Cheek blush -->
+      <circle cx="40" cy="59" r="2" fill="#e88080" opacity=".4"/>
+      <circle cx="60" cy="59" r="2" fill="#e88080" opacity=".4"/>`,
+
+    blonde_pinup: `
+      <!-- Victory rolls -->
+      <path d="M28 42 Q24 30 32 26 Q40 24 42 34 Z" fill="#f0d068"/>
+      <path d="M72 42 Q76 30 68 26 Q60 24 58 34 Z" fill="#f0d068"/>
+      <!-- Hair -->
+      <path d="M30 42 Q30 28 50 28 Q70 28 70 42 L70 68 Q50 72 30 68 Z" fill="#f4d068"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="52" rx="16" ry="19" fill="#f5d3b4"/>
+      <!-- Bangs wave -->
+      <path d="M34 42 Q42 37 50 40 Q58 37 66 42 Q58 46 50 45 Q42 46 34 42 Z" fill="#c99848"/>
+      <!-- Eyes + winged liner -->
+      <path d="M39 50 L47 50 L47 53 Q43 55 39 52 Z" fill="#2a1a10"/>
+      <path d="M53 50 L61 50 L61 53 Q57 55 53 52 Z" fill="#2a1a10"/>
+      <path d="M47 49 L50 47 M53 49 L50 47" stroke="#2a1a10" stroke-width=".5" fill="none"/>
+      <!-- Red lips -->
+      <path d="M43 62 Q50 65 57 62 Q55 68 50 68 Q45 68 43 62 Z" fill="#c21e2a"/>
+      <!-- Beauty mark -->
+      <circle cx="58" cy="60" r=".8" fill="#2a1a10"/>`,
+
+    brunette_mod: `
+      <!-- Sleek bob -->
+      <path d="M26 44 Q26 28 50 28 Q74 28 74 44 L74 72 Q72 76 66 74 L66 62 Q68 58 68 54 Q66 50 60 48 L40 48 Q34 50 32 54 Q32 58 34 62 L34 74 Q28 76 26 72 Z" fill="#2a1a12"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="54" rx="15" ry="18" fill="#f0c9a8"/>
+      <!-- Straight fringe -->
+      <path d="M35 42 L65 42 L63 48 L37 48 Z" fill="#2a1a12"/>
+      <!-- Eyes -->
+      <ellipse cx="43" cy="54" rx="2.5" ry="1.5" fill="#2a1a10"/>
+      <ellipse cx="57" cy="54" rx="2.5" ry="1.5" fill="#2a1a10"/>
+      <!-- Eyelashes -->
+      <path d="M40 52 L41 51 M45 52 L46 51 M54 52 L55 51 M59 52 L60 51" stroke="#2a1a10" stroke-width="1"/>
+      <!-- Lips (mauve) -->
+      <path d="M45 62 Q50 64 55 62 Q52 66 50 66 Q48 66 45 62 Z" fill="#8a3a4a"/>`,
+
+    pink_punk: `
+      <!-- Pink mohawk -->
+      <path d="M44 18 L56 18 L58 38 L42 38 Z" fill="#ec4899"/>
+      <path d="M46 12 L54 12 L55 20 L45 20 Z" fill="#ec4899"/>
+      <!-- Shaved sides -->
+      <path d="M30 38 Q30 50 34 52 L42 40 Z" fill="#f5d3b4"/>
+      <path d="M70 38 Q70 50 66 52 L58 40 Z" fill="#f5d3b4"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="56" rx="15" ry="18" fill="#f5d3b4"/>
+      <!-- Eyes (heavy liner) -->
+      <rect x="39" y="54" width="8" height="3" fill="#2a1a10"/>
+      <rect x="53" y="54" width="8" height="3" fill="#2a1a10"/>
+      <!-- Nose piercing -->
+      <circle cx="52" cy="62" r=".8" fill="#e8bd68"/>
+      <!-- Lips -->
+      <path d="M45 66 Q50 69 55 66 Q52 70 50 70 Q48 70 45 66 Z" fill="#2a1a10"/>
+      <!-- Eyebrow piercing -->
+      <circle cx="41" cy="50" r=".8" fill="#e8bd68"/>`,
+
+    raven_goth: `
+      <!-- Long black hair -->
+      <path d="M24 44 Q24 28 50 26 Q76 28 76 44 L78 82 Q76 96 68 96 L64 82 L64 70 Q50 74 36 70 L36 82 L32 96 Q24 96 22 82 Z" fill="#0a0706"/>
+      <!-- Face (pale) -->
+      <ellipse cx="50" cy="54" rx="15" ry="18" fill="#e8d5c0"/>
+      <!-- Widows peak bangs -->
+      <path d="M35 38 Q50 48 65 38 L65 44 L50 50 L35 44 Z" fill="#0a0706"/>
+      <!-- Eyes (dark shadow) -->
+      <path d="M37 52 L49 52 L49 56 Q43 58 37 55 Z" fill="#0a0706"/>
+      <path d="M51 52 L63 52 L63 55 Q57 58 51 56 Z" fill="#0a0706"/>
+      <circle cx="43" cy="54" r="1.5" fill="#4a2a5a"/>
+      <circle cx="57" cy="54" r="1.5" fill="#4a2a5a"/>
+      <!-- Black lips -->
+      <path d="M43 64 Q50 67 57 64 Q54 70 50 70 Q46 70 43 64 Z" fill="#1a0a10"/>
+      <!-- Choker -->
+      <rect x="35" y="78" width="30" height="3" fill="#6b1e3e"/>`,
+
+    silver_fox_f: `
+      <!-- Silver hair swept -->
+      <path d="M28 44 Q28 28 50 26 Q72 28 72 44 L72 68 Q64 64 50 66 Q36 64 28 68 Z" fill="#c0c0c8"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="54" rx="15" ry="18" fill="#e8c9a8"/>
+      <!-- Silver fringe -->
+      <path d="M34 40 Q42 34 50 38 Q58 34 66 40 Q58 44 50 43 Q42 44 34 40 Z" fill="#a0a0a8"/>
+      <!-- Sharp eyes -->
+      <path d="M38 52 Q43 51 48 53" stroke="#2a1a10" stroke-width="2" fill="none"/>
+      <path d="M52 53 Q57 51 62 52" stroke="#2a1a10" stroke-width="2" fill="none"/>
+      <circle cx="43" cy="53" r="1.5" fill="#2a1a10"/>
+      <circle cx="57" cy="53" r="1.5" fill="#2a1a10"/>
+      <!-- Lips -->
+      <path d="M44 62 Q50 64 56 62 Q53 66 50 66 Q47 66 44 62 Z" fill="#a05060"/>
+      <!-- Earring -->
+      <circle cx="34" cy="58" r="1.5" fill="#e8bd68"/>`,
+
+    flapper: `
+      <!-- 20s finger waves -->
+      <path d="M28 42 Q28 28 50 26 Q72 28 72 42 L70 58 Q50 62 30 58 Z" fill="#0a0706"/>
+      <!-- Hair waves -->
+      <path d="M30 40 Q40 36 50 38 Q60 36 70 40" stroke="#3a2a2a" stroke-width="1.5" fill="none"/>
+      <path d="M32 46 Q42 43 50 44 Q58 43 68 46" stroke="#3a2a2a" stroke-width="1.5" fill="none"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="52" rx="14" ry="17" fill="#f3d2b0"/>
+      <!-- Headband with feather -->
+      <rect x="32" y="38" width="36" height="3" fill="#e8bd68"/>
+      <path d="M50 38 L48 28 L52 26 L54 30 L52 38" fill="#e8bd68"/>
+      <!-- Eyes (kohl) -->
+      <ellipse cx="43" cy="50" rx="3" ry="2" fill="#0a0706"/>
+      <ellipse cx="57" cy="50" rx="3" ry="2" fill="#0a0706"/>
+      <!-- Cupid bow lips -->
+      <path d="M46 60 Q48 58 50 60 Q52 58 54 60 Q52 64 50 64 Q48 64 46 60 Z" fill="#c21e2a"/>
+      <!-- Pearl necklace -->
+      <circle cx="42" cy="78" r="1.2" fill="#f4ebd8"/>
+      <circle cx="50" cy="82" r="1.2" fill="#f4ebd8"/>
+      <circle cx="58" cy="78" r="1.2" fill="#f4ebd8"/>`,
+
+    curl_sultry: `
+      <!-- Wild curls -->
+      <path d="M22 48 Q22 26 50 24 Q78 26 78 48 L76 72 Q74 78 70 76 L68 66 Q70 56 66 52 L34 52 Q30 56 32 66 L30 76 Q26 78 24 72 Z" fill="#5a2818"/>
+      <!-- Curl details -->
+      <circle cx="28" cy="38" r="4" fill="#5a2818"/>
+      <circle cx="72" cy="38" r="4" fill="#5a2818"/>
+      <circle cx="30" cy="56" r="5" fill="#7a3a20"/>
+      <circle cx="70" cy="56" r="5" fill="#7a3a20"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="54" rx="14" ry="17" fill="#d8b090"/>
+      <!-- Eyes sultry -->
+      <path d="M38 52 Q43 54 48 52 Q43 50 38 52" fill="#2a1a10"/>
+      <path d="M52 52 Q57 54 62 52 Q57 50 52 52" fill="#2a1a10"/>
+      <circle cx="43" cy="52" r="1.5" fill="#1a0a08"/>
+      <circle cx="57" cy="52" r="1.5" fill="#1a0a08"/>
+      <!-- Full lips -->
+      <path d="M43 63 Q50 67 57 63 Q54 68 50 68 Q46 68 43 63 Z" fill="#a03040"/>
+      <circle cx="40" cy="59" r="2" fill="#c87060" opacity=".4"/>
+      <circle cx="60" cy="59" r="2" fill="#c87060" opacity=".4"/>`,
+
+    // MALE
+    dapper_man: `
+      <!-- Slicked back hair -->
+      <path d="M30 42 Q30 28 50 28 Q70 28 70 42 L70 52 Q65 46 50 46 Q35 46 30 52 Z" fill="#2a1a12"/>
+      <path d="M32 40 L68 40" stroke="#1a0a08" stroke-width="1"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="54" rx="14" ry="18" fill="#e8c39a"/>
+      <!-- Strong brow -->
+      <path d="M38 48 L47 48 M53 48 L62 48" stroke="#2a1a10" stroke-width="1.5"/>
+      <!-- Eyes -->
+      <circle cx="43" cy="52" r="1.5" fill="#2a1a10"/>
+      <circle cx="57" cy="52" r="1.5" fill="#2a1a10"/>
+      <!-- Nose shadow -->
+      <path d="M50 54 L48 62 L52 62 Z" fill="#c9a080" opacity=".5"/>
+      <!-- Smirk -->
+      <path d="M45 66 Q50 68 55 66" stroke="#2a1a10" stroke-width="1.5" fill="none"/>
+      <!-- Bow tie -->
+      <path d="M40 84 L50 80 L60 84 L60 90 L50 88 L40 90 Z" fill="#7a1a2b"/>`,
+
+    leather_man: `
+      <!-- Short spiky black hair -->
+      <path d="M32 40 Q30 24 50 24 Q70 24 68 40 L66 44 L62 38 L58 42 L54 36 L50 40 L46 36 L42 42 L38 38 L34 44 Z" fill="#0a0706"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="54" rx="14" ry="17" fill="#d8a888"/>
+      <!-- Stubble -->
+      <ellipse cx="50" cy="68" rx="13" ry="4" fill="#2a1a12" opacity=".5"/>
+      <!-- Sharp brow -->
+      <path d="M38 48 L48 50 M52 50 L62 48" stroke="#0a0706" stroke-width="2"/>
+      <!-- Eyes (intense) -->
+      <circle cx="43" cy="54" r="1.8" fill="#0a0706"/>
+      <circle cx="57" cy="54" r="1.8" fill="#0a0706"/>
+      <!-- Scar -->
+      <path d="M38 58 L42 52" stroke="#a05050" stroke-width="1"/>
+      <!-- Serious mouth -->
+      <path d="M44 66 L56 66" stroke="#2a1a10" stroke-width="1.5" fill="none"/>
+      <!-- Leather collar -->
+      <path d="M32 82 L40 78 L50 82 L60 78 L68 82 L68 92 L32 92 Z" fill="#1a1a1a"/>`,
+
+    hipster_beard: `
+      <!-- Quiff hair -->
+      <path d="M30 40 Q30 22 50 22 Q70 22 70 40 L70 48 Q50 44 30 48 Z" fill="#6b3a1a"/>
+      <path d="M35 22 Q50 18 65 22 Q60 28 50 28 Q40 28 35 22" fill="#8a4a20"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="52" rx="14" ry="16" fill="#e8bc96"/>
+      <!-- Big beard -->
+      <path d="M32 58 Q32 80 50 82 Q68 80 68 58 Q64 68 50 68 Q36 68 32 58 Z" fill="#6b3a1a"/>
+      <path d="M34 60 Q38 62 42 60 M58 60 Q62 62 66 60" stroke="#4a2818" stroke-width="1"/>
+      <!-- Eyes -->
+      <circle cx="43" cy="52" r="1.5" fill="#2a1a10"/>
+      <circle cx="57" cy="52" r="1.5" fill="#2a1a10"/>
+      <!-- Round glasses -->
+      <circle cx="43" cy="52" r="5" fill="none" stroke="#0a0706" stroke-width="1.2"/>
+      <circle cx="57" cy="52" r="5" fill="none" stroke="#0a0706" stroke-width="1.2"/>
+      <path d="M48 52 L52 52" stroke="#0a0706" stroke-width="1.2"/>`,
+
+    silver_fox_m: `
+      <!-- Silver hair swept back -->
+      <path d="M30 42 Q30 28 50 28 Q70 28 70 42 L70 50 Q50 46 30 50 Z" fill="#c0c0c8"/>
+      <path d="M32 42 L68 42" stroke="#a0a0a8" stroke-width=".5"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="54" rx="14" ry="18" fill="#d8b090"/>
+      <!-- Distinguished brow -->
+      <path d="M38 48 L47 48 M53 48 L62 48" stroke="#808088" stroke-width="1.5"/>
+      <!-- Eyes (piercing blue) -->
+      <circle cx="43" cy="52" r="1.8" fill="#2a4a6a"/>
+      <circle cx="57" cy="52" r="1.8" fill="#2a4a6a"/>
+      <!-- Sharp nose -->
+      <path d="M50 54 L48 62 L52 62 Z" fill="#c09070" opacity=".5"/>
+      <!-- Salt-pepper stubble -->
+      <ellipse cx="50" cy="67" rx="12" ry="3" fill="#808088" opacity=".4"/>
+      <!-- Mouth -->
+      <path d="M44 68 Q50 70 56 68" stroke="#2a1a10" stroke-width="1.2" fill="none"/>
+      <!-- Silver ear pin -->
+      <circle cx="34" cy="58" r="1" fill="#c0c0c8"/>`,
+
+    blonde_surfer: `
+      <!-- Messy blonde hair -->
+      <path d="M28 42 Q26 24 50 24 Q74 24 72 42 L70 54 L68 48 L64 52 L60 46 L56 52 L50 46 L44 52 L40 46 L36 52 L32 48 L30 54 Z" fill="#f0d068"/>
+      <!-- Face (tanned) -->
+      <ellipse cx="50" cy="54" rx="14" ry="17" fill="#d8a070"/>
+      <!-- Sun-bleached fringe -->
+      <path d="M35 42 Q50 36 65 42" stroke="#f8e088" stroke-width="2" fill="none"/>
+      <!-- Eyes -->
+      <circle cx="43" cy="54" r="1.8" fill="#3a6a8a"/>
+      <circle cx="57" cy="54" r="1.8" fill="#3a6a8a"/>
+      <!-- Eyebrows (light) -->
+      <path d="M39 50 L48 50 M52 50 L61 50" stroke="#c9a048" stroke-width="1"/>
+      <!-- Grin -->
+      <path d="M42 64 Q50 70 58 64 L58 66 Q50 72 42 66 Z" fill="#f0f0e0"/>
+      <!-- Freckles -->
+      <circle cx="42" cy="58" r=".6" fill="#a06040"/>
+      <circle cx="58" cy="58" r=".6" fill="#a06040"/>
+      <circle cx="50" cy="60" r=".6" fill="#a06040"/>`,
+
+    bad_boy: `
+      <!-- Tousled dark hair -->
+      <path d="M28 42 Q26 22 50 22 Q74 22 72 42 L68 48 L64 40 L58 46 L50 38 L42 46 L36 40 L32 48 Z" fill="#1a1008"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="54" rx="14" ry="17" fill="#d8a888"/>
+      <!-- Heavy brow -->
+      <path d="M38 48 L48 46 M52 46 L62 48" stroke="#0a0706" stroke-width="2"/>
+      <!-- Eyes (smoky) -->
+      <path d="M38 52 L48 52 L48 55 Q43 57 38 54 Z" fill="#0a0706"/>
+      <path d="M52 52 L62 52 L62 54 Q57 57 52 55 Z" fill="#0a0706"/>
+      <!-- Nose -->
+      <path d="M50 54 L48 62 L52 62" stroke="#a06848" fill="none"/>
+      <!-- Cigarette -->
+      <rect x="52" y="66" width="16" height="1.5" fill="#f4ebd8"/>
+      <circle cx="68" cy="66.5" r="1.5" fill="#ff4020"/>
+      <path d="M68 66 Q70 62 69 58" stroke="#a0a0a0" stroke-width="1" fill="none" opacity=".7"/>
+      <!-- Mouth -->
+      <path d="M44 67 L52 66" stroke="#2a1a10" stroke-width="1.5"/>
+      <!-- Earring -->
+      <circle cx="34" cy="60" r="1" fill="#e8bd68"/>`,
+
+    mustache: `
+      <!-- Hair -->
+      <path d="M30 42 Q30 28 50 28 Q70 28 70 42 L70 50 Q50 46 30 50 Z" fill="#4a2818"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="54" rx="14" ry="17" fill="#e8bc96"/>
+      <!-- Side parted -->
+      <path d="M40 42 L60 42" stroke="#2a1a12" stroke-width="1"/>
+      <!-- Eyes -->
+      <circle cx="43" cy="52" r="1.5" fill="#2a1a10"/>
+      <circle cx="57" cy="52" r="1.5" fill="#2a1a10"/>
+      <!-- Eyebrows -->
+      <path d="M38 48 L48 48 M52 48 L62 48" stroke="#4a2818" stroke-width="1.5"/>
+      <!-- Handlebar moustache -->
+      <path d="M35 64 Q42 60 50 63 Q58 60 65 64 Q63 66 60 66 Q56 68 50 66 Q44 68 40 66 Q37 66 35 64 Z" fill="#4a2818"/>
+      <path d="M30 64 Q34 60 38 62" stroke="#4a2818" stroke-width="2" fill="none"/>
+      <path d="M70 64 Q66 60 62 62" stroke="#4a2818" stroke-width="2" fill="none"/>
+      <!-- Small smile -->
+      <path d="M47 72 Q50 74 53 72" stroke="#2a1a10" stroke-width="1" fill="none"/>`,
+
+    smoulder: `
+      <!-- Dark tousled hair -->
+      <path d="M28 44 Q26 24 50 22 Q74 24 72 44 L68 50 L62 44 L55 50 L50 46 L45 50 L38 44 L32 50 Z" fill="#2a1812"/>
+      <!-- Face -->
+      <ellipse cx="50" cy="54" rx="14" ry="17" fill="#d8a888"/>
+      <!-- Defined jaw shadow -->
+      <path d="M36 66 Q50 72 64 66" stroke="#b09070" stroke-width="1" fill="none" opacity=".5"/>
+      <!-- Brooding brow -->
+      <path d="M37 48 L48 50 M52 50 L63 48" stroke="#0a0706" stroke-width="2"/>
+      <!-- Dark eyes -->
+      <circle cx="43" cy="54" r="1.8" fill="#0a0706"/>
+      <circle cx="57" cy="54" r="1.8" fill="#0a0706"/>
+      <!-- Cheek hollow -->
+      <path d="M38 60 Q40 64 38 68" stroke="#b09070" stroke-width="1" fill="none" opacity=".4"/>
+      <path d="M62 60 Q60 64 62 68" stroke="#b09070" stroke-width="1" fill="none" opacity=".4"/>
+      <!-- Slight smirk -->
+      <path d="M44 66 Q50 68 56 66 Q53 68 50 68 Q47 68 44 66" fill="#8a4030"/>
+      <!-- 5 o'clock shadow -->
+      <ellipse cx="50" cy="70" rx="11" ry="2" fill="#2a1812" opacity=".3"/>`,
+  };
+
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <radialGradient id="v_${fig}" cx="50%" cy="50%" r="55%">
+        <stop offset="60%" stop-color="transparent"/>
+        <stop offset="100%" stop-color="#000" stop-opacity=".45"/>
+      </radialGradient>
+    </defs>
+    <rect width="100" height="100" fill="${bg}"/>
+    ${figs[fig] || figs.dapper_man}
+    <rect width="100" height="100" fill="url(#v_${fig})"/>
+  </svg>`;
+}
+
+// ═══════════════ CITIES ═══════════════
+const CITIES = [
+  {id:'london',     name:'LONDON',     sub:"Big Ben · Soho · The Eye",            nx:0.68, ny:0.78, size:26, color:'#e8bd68', hero:true},
+  {id:'edinburgh',  name:'EDINBURGH',  sub:"Castle Rock · Royal Mile",            nx:0.52, ny:0.30, size:18, color:'#ec4899'},
+  {id:'glasgow',    name:'GLASGOW',    sub:"The Clyde · Tenements",               nx:0.44, ny:0.32, size:17, color:'#14b8a6'},
+  {id:'newcastle',  name:'NEWCASTLE',  sub:"Tyne Bridge · Quayside",              nx:0.57, ny:0.40, size:14, color:'#14b8a6'},
+  {id:'manchester', name:'MANCHESTER', sub:"Red Brick · Canals · Music",          nx:0.54, ny:0.54, size:16, color:'#c97b5a'},
+  {id:'liverpool',  name:'LIVERPOOL',  sub:"Albert Dock · Liver Birds",           nx:0.45, ny:0.55, size:15, color:'#b88940'},
+  {id:'birmingham', name:'BIRMINGHAM', sub:"Bullring · Canals · Peaky Vibes",     nx:0.55, ny:0.66, size:15, color:'#6b3d6e'},
+  {id:'oxford',     name:'OXFORD',     sub:"Dreaming Spires · Punts",             nx:0.62, ny:0.73, size:13, color:'#b88940'},
+  {id:'cardiff',    name:'CARDIFF',    sub:"The Castle · The Dragon",             nx:0.45, ny:0.75, size:15, color:'#ec4899'},
+  {id:'brighton',   name:'BRIGHTON',   sub:"Palace Pier · Pavilion",              nx:0.66, ny:0.86, size:13, color:'#c97b5a'},
+  {id:'dublin',     name:'DUBLIN',     sub:"Ha'penny Bridge · Temple Bar",        nx:0.22, ny:0.56, size:17, color:'#14b8a6'},
+  {id:'belfast',    name:'BELFAST',    sub:"Titanic Quarter · Yellow Cranes",     nx:0.30, ny:0.42, size:15, color:'#ec4899'},
+];
+const CITY_BY_ID = Object.fromEntries(CITIES.map(c => [c.id, c]));
+
+const FILLER = [
+  ['SHETLAND',0.55,0.05,8,'#7a1a2b'],['ORKNEY',0.50,0.12,8,'#ec4899'],
+  ['HIGHLANDS',0.42,0.18,10,'#b88940'],['THURSO',0.48,0.15,7,'#6b3d6e'],
+  ['INVERNESS',0.52,0.22,9,'#14b8a6'],['ABERDEEN',0.58,0.26,10,'#c97b5a'],
+  ['LEWIS',0.30,0.16,7,'#b88940'],['SKYE',0.34,0.22,8,'#14b8a6'],
+  ['HEBRIDES',0.28,0.24,8,'#ec4899'],['MULL',0.35,0.28,7,'#c97b5a'],
+  ['ISLAY',0.32,0.32,7,'#6b3d6e'],['ARGYLL',0.38,0.30,8,'#b88940'],
+  ['PERTH',0.50,0.32,8,'#b88940'],['DUNDEE',0.55,0.30,8,'#14b8a6'],
+  ['STIRLING',0.46,0.34,8,'#ec4899'],['FIFE',0.52,0.34,7,'#c97b5a'],
+  ['AYR',0.42,0.38,7,'#c97b5a'],['BORDERS',0.51,0.38,8,'#7a1a2b'],
+  ['CARLISLE',0.48,0.43,8,'#b88940'],['DURHAM',0.56,0.43,7,'#b88940'],
+  ['SUNDERLAND',0.59,0.42,7,'#14b8a6'],['MIDDLESBROUGH',0.59,0.46,8,'#6b3d6e'],
+  ['LAKES',0.47,0.47,7,'#14b8a6'],['CUMBRIA',0.49,0.49,8,'#7a1a2b'],
+  ['LANCASTER',0.48,0.51,8,'#ec4899'],['YORK',0.58,0.50,10,'#ec4899'],
+  ['HULL',0.63,0.52,8,'#c97b5a'],['PRESTON',0.49,0.53,7,'#c97b5a'],
+  ['LEEDS',0.55,0.51,10,'#b88940'],['BRADFORD',0.53,0.52,7,'#6b3d6e'],
+  ['SHEFFIELD',0.56,0.56,9,'#6b3d6e'],['LINCOLN',0.62,0.58,8,'#14b8a6'],
+  ['CHESTER',0.47,0.57,7,'#7a1a2b'],['STOKE',0.51,0.59,7,'#14b8a6'],
+  ['DERBY',0.55,0.61,7,'#b88940'],['NOTTINGHAM',0.58,0.62,9,'#b88940'],
+  ['LEICESTER',0.57,0.66,8,'#ec4899'],['COVENTRY',0.55,0.68,7,'#7a1a2b'],
+  ['PETERBOROUGH',0.62,0.64,8,'#c97b5a'],['NORWICH',0.69,0.64,9,'#14b8a6'],
+  ['CAMBRIDGE',0.64,0.69,9,'#b88940'],['IPSWICH',0.70,0.70,8,'#6b3d6e'],
+  ['COLCHESTER',0.68,0.72,7,'#c97b5a'],['BANGOR',0.40,0.57,7,'#ec4899'],
+  ['WREXHAM',0.45,0.59,7,'#b88940'],['ABERYSTWYTH',0.40,0.65,8,'#14b8a6'],
+  ['SWANSEA',0.42,0.74,8,'#6b3d6e'],['NEWPORT',0.47,0.75,7,'#c97b5a'],
+  ['BRISTOL',0.50,0.75,9,'#c97b5a'],['BATH',0.52,0.77,7,'#ec4899'],
+  ['SWINDON',0.55,0.75,7,'#b88940'],['GLOUCESTER',0.52,0.71,7,'#14b8a6'],
+  ['READING',0.60,0.76,7,'#7a1a2b'],['PORTSMOUTH',0.58,0.84,8,'#b88940'],
+  ['SOUTHAMPTON',0.56,0.82,8,'#14b8a6'],['BOURNEMOUTH',0.53,0.85,8,'#c97b5a'],
+  ['DORSET',0.50,0.83,7,'#6b3d6e'],['EXETER',0.45,0.85,8,'#ec4899'],
+  ['PLYMOUTH',0.40,0.87,8,'#7a1a2b'],['TRURO',0.32,0.89,7,'#b88940'],
+  ['CORNWALL',0.36,0.91,8,'#14b8a6'],['CANTERBURY',0.72,0.80,8,'#6b3d6e'],
+  ['DOVER',0.74,0.82,7,'#14b8a6'],['DERRY',0.24,0.40,8,'#ec4899'],
+  ['SLIGO',0.19,0.46,7,'#14b8a6'],['GALWAY',0.14,0.53,8,'#b88940'],
+  ['ATHLONE',0.19,0.55,7,'#c97b5a'],['LIMERICK',0.16,0.61,8,'#14b8a6'],
+  ['WATERFORD',0.21,0.66,7,'#c97b5a'],['WEXFORD',0.26,0.64,7,'#6b3d6e'],
+  ['KILKENNY',0.22,0.62,7,'#b88940'],['CORK',0.18,0.68,9,'#7a1a2b'],
+  ['KERRY',0.12,0.66,7,'#ec4899'],
+];
+const ALL_LABELS = [...CITIES, ...FILLER.map(f=>({name:f[0],nx:f[1],ny:f[2],size:f[3],color:f[4]}))];
+
+// ═══════════════ STATE ═══════════════
+const canvas = document.getElementById('map-canvas');
+const ctx = canvas.getContext('2d');
+let myId = null;
+let me = {
+  x: 0.68, y: 0.78,
+  cityX: 700, cityY: 500,
+  room: 'map',
+  nick: '',
+  avatar: AVATARS[0],
+  photo: null,
+  age: '',
+  sex: '',
+  location: '',
+  chatColour: '#f1ead9'  // default bone/cream
+};
+const others = {};
+const messages = {};  // latest msg per user id, for speech bubbles
+
+let currentRoom = 'map';
+let nearCity = null;
+let pulsePhase = 0;
+let myPlayerRef = null;
+let chatRef = null;
+const photoImgs = {};
+
+// Rain cycle: start dry, then 2 min rain, 4 min dry, loop
+let rainOn = false;
+let rainStartTime = Date.now();
+function rainCycleTick(){
+  const elapsed = Date.now() - rainStartTime;
+  if(rainOn && elapsed >= 120000){          // rain for 2 min -> dry
+    rainOn = false; rainStartTime = Date.now();
+  } else if(!rainOn && elapsed >= 240000){  // dry for 4 min -> rain
+    rainOn = true; rainStartTime = Date.now();
+  }
+}
+setInterval(rainCycleTick, 1000);
+
+// ═══════════════ LOGIN ═══════════════
+function buildAvatarGrid(){
+  const grid = document.getElementById('av-grid');
+  grid.innerHTML = '';
+  AVATARS.forEach((a,i) => {
+    const div = document.createElement('div');
+    div.className = 'av' + (i===0 ? ' sel' : '');
+    div.dataset.id = a.id;
+    div.innerHTML = avatarSVG(a.bg, a.fig) + `<div class="av-name">${a.name}</div>`;
+    div.onclick = () => {
+      document.querySelectorAll('.av').forEach(x => x.classList.remove('sel'));
+      div.classList.add('sel');
+      me.avatar = a;
+      me.photo = null;
+      // Reset photo preview
+      const preview = document.getElementById('photo-preview');
+      preview.innerHTML = `<div class="photo-placeholder"><div class="photo-icon">◈</div><div>Tap to upload your picture</div></div>`;
+    };
+    grid.appendChild(div);
+  });
+}
+buildAvatarGrid();
+
+// Tabs
+document.getElementById('tab-silhouettes').addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-silhouettes').classList.add('active');
+  document.getElementById('av-grid').classList.remove('inactive');
+  document.getElementById('photo-panel').classList.remove('active');
+});
+document.getElementById('tab-photo').addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-photo').classList.add('active');
+  document.getElementById('av-grid').classList.add('inactive');
+  document.getElementById('photo-panel').classList.add('active');
+});
+
+// Photo upload
+document.getElementById('photo-preview').addEventListener('click', () => {
+  document.getElementById('photo-input').click();
+});
+document.getElementById('photo-input').addEventListener('change', (ev) => {
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = 96; c.height = 96;
+      const cx = c.getContext('2d');
+      const s = Math.min(img.width, img.height);
+      const sx = (img.width - s)/2, sy = (img.height - s)/2;
+      cx.drawImage(img, sx, sy, s, s, 0, 0, 96, 96);
+      const data = c.toDataURL('image/jpeg', 0.75);
+      me.photo = data;
+      document.getElementById('photo-preview').innerHTML = `<img src="${data}">`;
+      document.querySelectorAll('.av').forEach(x => x.classList.remove('sel'));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// Enter button
+document.getElementById('enter-btn').addEventListener('click', enterWorld);
+document.getElementById('nick').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') enterWorld();
+});
+
+// Chat colour picker
+const CHAT_COLOURS = [
+  '#f1ead9', // bone (default)
+  '#e8bd68', // gold
+  '#ec4899', // pink neon
+  '#14b8a6', // teal
+  '#c97b5a', // coral
+  '#a32b3d', // oxblood
+  '#6b3d6e', // amethyst
+  '#f4d068', // mustard
+  '#7abbd8', // sky
+  '#b8d9a8', // sage
+];
+(function buildColourPicker(){
+  const box = document.getElementById('colour-picker');
+  CHAT_COLOURS.forEach((c, i) => {
+    const sw = document.createElement('div');
+    sw.className = 'colour-swatch' + (i===0 ? ' selected' : '');
+    sw.style.background = c;
+    sw.dataset.colour = c;
+    sw.onclick = () => {
+      document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
+      sw.classList.add('selected');
+      me.chatColour = c;
+    };
+    box.appendChild(sw);
+  });
+})();
+
+function enterWorld(){
+  const nick = document.getElementById('nick').value.trim();
+  if(!nick){
+    const input = document.getElementById('nick');
+    input.focus();
+    input.style.borderColor = 'var(--oxblood-light)';
+    setTimeout(() => input.style.borderColor = '', 1500);
+    return;
+  }
+  me.nick = nick.substring(0, 16);
+  me.age = document.getElementById('profile-age').value.trim();
+  me.sex = document.getElementById('profile-sex').value;
+  me.location = document.getElementById('profile-location').value.trim().substring(0, 30);
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('world').style.display = 'flex';
+  resizeCanvas();
+  startGame();
+}
+
+// ═══════════════ CANVAS RESIZE ═══════════════
+function resizeCanvas(){
+  const dpr = window.devicePixelRatio || 1;
+  const w = window.innerWidth, h = window.innerHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resizeCanvas);
+
+// ═══════════════ MAP ART SPACE ═══════════════
+let art = { w:600, h:800, ox:0, oy:60 };
+
+function layoutArt(){
+  const cw = canvas.clientWidth, ch = canvas.clientHeight;
+  const topPad = 50, botPad = 20;
+  const availH = ch - topPad - botPad;
+  const artRatio = 0.72;
+  const screenRatio = cw / availH;
+  let aw, ah;
+  if(screenRatio > artRatio){
+    ah = availH; aw = ah * artRatio;
+  } else {
+    aw = cw; ah = aw / artRatio;
+    if(ah > availH) ah = availH;
+  }
+  art.w = aw; art.h = ah;
+  art.ox = (cw - aw)/2;
+  art.oy = topPad + (availH - ah)/2;
+}
+
+function mapCoord(nx, ny){
+  return { x: art.ox + nx*art.w, y: art.oy + ny*art.h };
+}
+function inverseMap(x, y){
+  return { nx: (x - art.ox)/art.w, ny: (y - art.oy)/art.h };
+}
+
+function onLand(nx, ny){
+  if(ny < 0.14 && nx > 0.48 && nx < 0.58) return true;
+  if(ny >= 0.12 && ny < 0.38){
+    const dx=(nx-0.48), dy=(ny-0.25);
+    if((dx*dx)/0.03 + (dy*dy)/0.025 < 1) return true;
+    if(nx < 0.38 && ny > 0.15 && ny < 0.32) return true;
+  }
+  if(ny >= 0.34 && ny < 0.50){
+    const dx=(nx-0.50), dy=(ny-0.42);
+    if((dx*dx)/0.022 + (dy*dy)/0.01 < 1) return true;
+  }
+  if(ny >= 0.46 && ny <= 0.78){
+    const dx=(nx-0.56), dy=(ny-0.62);
+    if((dx*dx)/0.020 + (dy*dy)/0.035 < 1) return true;
+  }
+  if(ny >= 0.55 && ny <= 0.78){
+    const dx=(nx-0.43), dy=(ny-0.68);
+    if((dx*dx)/0.006 + (dy*dy)/0.016 < 1) return true;
+  }
+  if(ny >= 0.78 && ny <= 0.93){
+    const dx=(nx-0.48), dy=(ny-0.85);
+    if((dx*dx)/0.028 + (dy*dy)/0.008 < 1) return true;
+  }
+  if(ny > 0.76 && ny < 0.85 && nx > 0.65 && nx < 0.78) return true;
+  const dx=(nx-0.20), dy=(ny-0.54);
+  if((dx*dx)/0.015 + (dy*dy)/0.022 < 1) return true;
+  return false;
+}
+
+// Stipple cache
+let stipple = [];
+(function genStipple(){
+  for(let i=0; i<2400; i++){
+    const nx = Math.random(), ny = Math.random();
+    if(onLand(nx, ny)) stipple.push({nx, ny, s: Math.random()*1.2+0.3, a: Math.random()*0.3+0.1});
+  }
+})();
+
+// ═══════════════ DRAW MAP ═══════════════
+function drawMap(){
+  const cw = canvas.clientWidth, ch = canvas.clientHeight;
+  layoutArt();
+
+  ctx.fillStyle = '#0a0706';
+  ctx.fillRect(0, 0, cw, ch);
+
+  // Vignette
+  const vg = ctx.createRadialGradient(cw/2, ch/2, 0, cw/2, ch/2, Math.max(cw,ch)*0.7);
+  vg.addColorStop(0, 'rgba(184,137,64,0.05)');
+  vg.addColorStop(0.6, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.7)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, cw, ch);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(184,137,64,0.04)';
+  ctx.lineWidth = 1;
+  for(let i=0; i<=10; i++){
+    const x = art.ox + (i/10)*art.w;
+    ctx.beginPath(); ctx.moveTo(x, art.oy); ctx.lineTo(x, art.oy+art.h); ctx.stroke();
+    const y = art.oy + (i/10)*art.h;
+    ctx.beginPath(); ctx.moveTo(art.ox, y); ctx.lineTo(art.ox+art.w, y); ctx.stroke();
+  }
+
+  // Stippled land texture
+  stipple.forEach(d => {
+    const p = mapCoord(d.nx, d.ny);
+    ctx.fillStyle = `rgba(184,137,64,${d.a*0.4})`;
+    ctx.beginPath(); ctx.arc(p.x, p.y, d.s, 0, Math.PI*2); ctx.fill();
+  });
+
+  // Labels (biggest first, with collision detection)
+  const sorted = [...ALL_LABELS].sort((a,b) => (b.size||0) - (a.size||0));
+  const placedRects = [];
+  const sizeScale = Math.max(art.w, art.h) / 800;
+
+  sorted.forEach(lbl => {
+    const p = mapCoord(lbl.nx, lbl.ny);
+    const isHover = nearCity && nearCity.name === lbl.name;
+    const isHero = lbl.hero;
+    const size = lbl.size * sizeScale * 1.4;
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    if(isHero){
+      ctx.font = `900 ${size}px 'Archivo Black', sans-serif`;
+    } else if(lbl.id){
+      ctx.font = `700 ${size}px 'Inter', sans-serif`;
+    } else {
+      ctx.font = `600 ${size}px 'Inter', sans-serif`;
+    }
+
+    const tm = ctx.measureText(lbl.name);
+    const pad = 3;
+    const rect = {
+      left: p.x - tm.width/2 - pad, right: p.x + tm.width/2 + pad,
+      top: p.y - size/2 - pad, bottom: p.y + size/2 + pad,
+    };
+
+    let collides = false;
+    if(!lbl.hero){
+      for(const r of placedRects){
+        if(!(rect.right < r.left || rect.left > r.right || rect.bottom < r.top || rect.top > r.bottom)){
+          collides = true; break;
+        }
+      }
+    }
+    if(collides){ ctx.restore(); return; }
+    placedRects.push(rect);
+
+    if(isHover){
+      const glowR = size * 3;
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowR);
+      glow.addColorStop(0, `${lbl.color}80`);
+      glow.addColorStop(0.5, `${lbl.color}20`);
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(p.x, p.y, glowR, 0, Math.PI*2); ctx.fill();
+    }
+
+    ctx.fillStyle = isHover ? '#ffffff' : lbl.color;
+    if(isHover){ ctx.shadowColor = lbl.color; ctx.shadowBlur = 16; }
+    ctx.fillText(lbl.name, p.x, p.y);
+    ctx.restore();
+
+    if(lbl.id){
+      ctx.fillStyle = isHover ? '#ffffff' : lbl.color;
+      const dotR = (isHero ? 4 : 2.5) * (isHover ? 1.5 : 1);
+      ctx.beginPath(); ctx.arc(p.x, p.y + size * 0.8, dotR, 0, Math.PI*2); ctx.fill();
+      if(isHover){
+        ctx.strokeStyle = lbl.color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y + size * 0.8, dotR + 4 + Math.sin(pulsePhase*0.12)*2, 0, Math.PI*2);
+        ctx.stroke();
+      }
+    }
+  });
+
+  // Draw me + other players on the map
+  const allOnMap = [me, ...Object.values(others).filter(o => o.room === 'map')];
+  allOnMap.sort((a,b) => a.y - b.y);
+  allOnMap.forEach(p => drawPersonOnMap(p));
+}
+
+// Cache rendered avatar images
+const avatarImgs = {};
+function getAvatarImg(avatar){
+  if(!avatar) avatar = AVATARS[0];
+  const key = avatar.id;
+  if(avatarImgs[key] && avatarImgs[key].complete) return avatarImgs[key];
+  if(!avatarImgs[key]){
+    const svg = avatarSVG(avatar.bg, avatar.fig);
+    const blob = new Blob([svg], {type: 'image/svg+xml'});
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.src = url;
+    avatarImgs[key] = img;
+  }
+  return avatarImgs[key];
+}
+
+function drawPersonOnMap(p){
+  const pos = mapCoord(p.x, p.y);
+  drawPerson(ctx, pos.x, pos.y, p, 0.9);
+}
+function drawPersonInCity(p){
+  drawPerson(ctx, p.cityX, p.cityY, p, 1.6);
+}
+
+function drawPerson(g, x, y, p, scale){
+  const r = 14 * scale;
+  // Soft shadow
+  g.save();
+  g.globalAlpha = 0.5;
+  g.fillStyle = '#000';
+  g.beginPath(); g.ellipse(x, y + r + 2, r*0.9, r*0.25, 0, 0, Math.PI*2); g.fill();
+  g.restore();
+
+  // Photo or avatar image
+  const useImg = p.photo ? null : getAvatarImg(p.avatar);
+  g.save();
+  // Gold outer ring
+  g.beginPath(); g.arc(x, y, r+2, 0, Math.PI*2);
+  g.fillStyle = '#b88940'; g.fill();
+  // Inner ink border
+  g.beginPath(); g.arc(x, y, r+1, 0, Math.PI*2);
+  g.fillStyle = '#0a0706'; g.fill();
+
+  // Clip to circle
+  g.beginPath(); g.arc(x, y, r, 0, Math.PI*2); g.clip();
+
+  if(p.photo){
+    if(!photoImgs[p.photo]){
+      const im = new Image(); im.src = p.photo; photoImgs[p.photo] = im;
+    }
+    const img = photoImgs[p.photo];
+    if(img.complete) g.drawImage(img, x-r, y-r, r*2, r*2);
+    else { g.fillStyle = '#1f1a16'; g.fillRect(x-r, y-r, r*2, r*2); }
+  } else if(useImg && useImg.complete){
+    g.drawImage(useImg, x-r, y-r, r*2, r*2);
+  } else {
+    // Fallback: coloured circle
+    g.fillStyle = (p.avatar && p.avatar.bg) || '#7a1a2b';
+    g.fillRect(x-r, y-r, r*2, r*2);
+  }
+  g.restore();
+}
+
+// ═══════════════ CITY SCENES ═══════════════
+// London — the hero city, properly illustrated in dark editorial style
+function drawLondon(g, w, h){
+  // Deep dusk sky — cobalt → warm amber horizon
+  const sky = g.createLinearGradient(0, 0, 0, h*0.62);
+  sky.addColorStop(0, '#0f1a2e');
+  sky.addColorStop(0.6, '#2a1e2e');
+  sky.addColorStop(1, '#4a2a1e');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h*0.62);
+
+  // Amber horizon haze + sun glow
+  const glow = g.createRadialGradient(w*0.72, h*0.58, 20, w*0.72, h*0.58, w*0.6);
+  glow.addColorStop(0, 'rgba(232, 189, 104, 0.4)');
+  glow.addColorStop(0.3, 'rgba(201, 123, 90, 0.2)');
+  glow.addColorStop(1, 'transparent');
+  g.fillStyle = glow; g.fillRect(0, 0, w, h*0.62);
+
+  // Stars
+  g.fillStyle = 'rgba(241, 234, 217, 0.6)';
+  for(let i=0; i<30; i++){
+    const sx = (i*137) % w, sy = (i*73) % (h*0.3);
+    g.fillRect(sx, sy, 1, 1);
+  }
+
+  // Distant city skyline silhouette
+  g.fillStyle = '#0a0706';
+  g.beginPath();
+  g.moveTo(0, h*0.58);
+  for(let i=0; i<30; i++){
+    const bx = (i/29) * w;
+    const bh = (Math.sin(i*1.3) * 0.08 + 0.12) * h;
+    g.lineTo(bx, h*0.58 - bh);
+    g.lineTo(bx + w/30, h*0.58 - bh);
+  }
+  g.lineTo(w, h*0.58); g.closePath(); g.fill();
+
+  // Distant building windows (warm glow)
+  g.fillStyle = 'rgba(232, 189, 104, 0.3)';
+  for(let i=0; i<80; i++){
+    g.fillRect(Math.random()*w, h*0.45 + Math.random()*h*0.12, 2, 2);
+  }
+
+  // Thames river
+  g.fillStyle = '#1a1510';
+  g.fillRect(0, h*0.62, w, h*0.12);
+  // River reflections
+  g.fillStyle = 'rgba(232, 189, 104, 0.15)';
+  for(let i=0; i<w; i+=40){
+    g.fillRect(i, h*0.62 + 6, 20, 1);
+    g.fillRect(i+10, h*0.62 + 14, 15, 1);
+  }
+
+  // Big Ben silhouette (left)
+  const bx = w*0.15, by = h*0.20;
+  g.fillStyle = '#0a0706';
+  // Tower body
+  g.fillRect(bx, by, 40, h*0.42);
+  // Clock level
+  g.fillRect(bx-5, by+5, 50, 40);
+  // Spire
+  g.beginPath();
+  g.moveTo(bx-3, by); g.lineTo(bx+20, by-50); g.lineTo(bx+43, by); g.closePath();
+  g.fill();
+  // Clock face glowing
+  g.fillStyle = 'rgba(232, 189, 104, 0.95)';
+  g.beginPath(); g.arc(bx+20, by+25, 12, 0, Math.PI*2); g.fill();
+  g.strokeStyle = '#0a0706'; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(bx+20, by+25); g.lineTo(bx+20, by+16); g.stroke();
+  g.beginPath(); g.moveTo(bx+20, by+25); g.lineTo(bx+27, by+28); g.stroke();
+  // Clock glow halo
+  const clockGlow = g.createRadialGradient(bx+20, by+25, 5, bx+20, by+25, 50);
+  clockGlow.addColorStop(0, 'rgba(232, 189, 104, 0.4)');
+  clockGlow.addColorStop(1, 'transparent');
+  g.fillStyle = clockGlow;
+  g.beginPath(); g.arc(bx+20, by+25, 50, 0, Math.PI*2); g.fill();
+
+  // London Eye (right, static, moody)
+  const ex = w*0.75, ey = h*0.28;
+  g.strokeStyle = 'rgba(241, 234, 217, 0.25)';
+  g.lineWidth = 2;
+  g.beginPath(); g.arc(ex, ey, 70, 0, Math.PI*2); g.stroke();
+  g.lineWidth = 1;
+  for(let i=0; i<16; i++){
+    const a = (i/16) * Math.PI*2;
+    g.beginPath();
+    g.moveTo(ex, ey);
+    g.lineTo(ex + Math.cos(a)*70, ey + Math.sin(a)*70);
+    g.stroke();
+    // Capsules - some lit pink/teal
+    const glow = i % 3;
+    g.fillStyle = glow === 0 ? '#ec4899' : (glow === 1 ? '#14b8a6' : '#b88940');
+    g.globalAlpha = 0.75;
+    g.beginPath(); g.arc(ex + Math.cos(a)*70, ey + Math.sin(a)*70, 3.5, 0, Math.PI*2); g.fill();
+    g.globalAlpha = 1;
+  }
+  // Support legs
+  g.fillStyle = '#0a0706';
+  g.fillRect(ex-5, ey, 10, h*0.35);
+
+  // Tower Bridge silhouette (far right)
+  const tx = w*0.92, ty = h*0.46;
+  g.fillStyle = '#0a0706';
+  g.fillRect(tx-40, ty, 15, 50);
+  g.fillRect(tx-5, ty, 15, 50);
+  g.fillRect(tx-45, ty+10, 60, 6);
+  // Tops (pointed)
+  g.beginPath();
+  g.moveTo(tx-42, ty); g.lineTo(tx-32, ty-15); g.lineTo(tx-22, ty); g.closePath(); g.fill();
+  g.beginPath();
+  g.moveTo(tx-7, ty); g.lineTo(tx+3, ty-15); g.lineTo(tx+13, ty); g.closePath(); g.fill();
+
+  // Street/pavement (foreground)
+  g.fillStyle = '#15110f';
+  g.fillRect(0, h*0.74, w, h*0.26);
+  // Wet shine
+  g.fillStyle = 'rgba(184, 137, 64, 0.08)';
+  g.fillRect(0, h*0.74, w, h*0.26);
+  // Puddle reflections
+  for(let i=0; i<5; i++){
+    const px = (i*230 + 80) % w;
+    const pg = g.createRadialGradient(px, h*0.86, 5, px, h*0.86, 60);
+    pg.addColorStop(0, 'rgba(232, 189, 104, 0.15)');
+    pg.addColorStop(1, 'transparent');
+    g.fillStyle = pg;
+    g.fillRect(px-60, h*0.82, 120, 30);
+  }
+
+  // Red phone box (foreground left)
+  g.fillStyle = '#7a1a2b';
+  g.fillRect(60, h*0.68, 38, 80);
+  g.fillStyle = '#0a0706';
+  g.fillRect(65, h*0.71, 28, 60);
+  // Phone box windows glow
+  g.fillStyle = 'rgba(232, 189, 104, 0.4)';
+  for(let i=0; i<3; i++){
+    for(let j=0; j<4; j++){
+      g.fillRect(68 + i*8, h*0.72 + j*14, 6, 10);
+    }
+  }
+  g.fillStyle = '#7a1a2b';
+  g.fillRect(58, h*0.67, 42, 8);
+
+  // Black cab silhouette (foreground right)
+  const cx = w*0.7, cy = h*0.86;
+  g.fillStyle = '#0a0706';
+  // Body
+  g.fillRect(cx, cy, 100, 24);
+  g.fillRect(cx+20, cy-18, 60, 18);
+  // Windows (lit)
+  g.fillStyle = 'rgba(232, 189, 104, 0.5)';
+  g.fillRect(cx+25, cy-14, 25, 12);
+  g.fillRect(cx+53, cy-14, 25, 12);
+  // Wheels
+  g.fillStyle = '#0a0706';
+  g.beginPath(); g.arc(cx+18, cy+24, 8, 0, Math.PI*2); g.fill();
+  g.beginPath(); g.arc(cx+82, cy+24, 8, 0, Math.PI*2); g.fill();
+  // Tail light (glowing red)
+  g.fillStyle = '#7a1a2b';
+  g.shadowColor = '#7a1a2b'; g.shadowBlur = 10;
+  g.fillRect(cx+98, cy+4, 3, 5);
+  g.shadowBlur = 0;
+
+  // Fog at ground level
+  g.fillStyle = 'rgba(241, 234, 217, 0.06)';
+  g.fillRect(0, h*0.72, w, 30);
+  g.fillStyle = 'rgba(241, 234, 217, 0.04)';
+  g.fillRect(0, h*0.78, w, 40);
+
+  // Rain streaks (cycles on/off every few minutes)
+  if(rainOn){
+    g.strokeStyle = 'rgba(184, 200, 220, 0.25)';
+    g.lineWidth = 1;
+    for(let i=0; i<50; i++){
+      const rx = (i*41 + pulsePhase*3) % w;
+      const ry = ((i*23 + pulsePhase*8) % h) * 0.7;
+      g.beginPath(); g.moveTo(rx, ry); g.lineTo(rx-3, ry+12); g.stroke();
+    }
+  }
+}
+
+// ═══════════════ HELPERS for city scenes ═══════════════
+function starField(g, w, h, maxY, count=40, col='rgba(241,234,217,0.5)'){
+  g.fillStyle = col;
+  for(let i=0; i<count; i++){
+    g.fillRect((i*137)%w, (i*73)%maxY, 1, 1);
+  }
+}
+function cityGlow(g, x, y, radius, colour, alpha=0.4){
+  const gl = g.createRadialGradient(x, y, 2, x, y, radius);
+  gl.addColorStop(0, colour.replace(')', `,${alpha})`).replace('rgb','rgba'));
+  gl.addColorStop(1, 'transparent');
+  g.fillStyle = gl;
+  g.beginPath(); g.arc(x, y, radius, 0, Math.PI*2); g.fill();
+}
+
+// ═══════════════ EDINBURGH — Castle Rock at night, misty blue-purple ═══════════════
+function drawEdinburgh(g, w, h){
+  // Night sky — deep violet to amber
+  const sky = g.createLinearGradient(0, 0, 0, h*0.65);
+  sky.addColorStop(0, '#0a0614');
+  sky.addColorStop(0.5, '#2a1a3e');
+  sky.addColorStop(1, '#4a2a3e');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h*0.65);
+
+  // Stars
+  starField(g, w, h*0.4, 50);
+
+  // Aurora-like glow (very subtle)
+  const aur = g.createLinearGradient(0, 0, 0, h*0.35);
+  aur.addColorStop(0, 'transparent');
+  aur.addColorStop(0.5, 'rgba(20,184,166,0.08)');
+  aur.addColorStop(1, 'transparent');
+  g.fillStyle = aur; g.fillRect(0, 0, w, h*0.4);
+
+  // Moon (crescent)
+  g.fillStyle = 'rgba(241, 234, 217, 0.9)';
+  g.beginPath(); g.arc(w*0.85, h*0.12, 18, 0, Math.PI*2); g.fill();
+  g.fillStyle = '#0a0614';
+  g.beginPath(); g.arc(w*0.86, h*0.11, 17, 0, Math.PI*2); g.fill();
+
+  // Volcanic Castle Rock silhouette
+  g.fillStyle = '#0a0706';
+  g.beginPath();
+  g.moveTo(0, h*0.6);
+  g.lineTo(w*0.15, h*0.5);
+  g.lineTo(w*0.22, h*0.38);
+  g.lineTo(w*0.28, h*0.32);
+  g.lineTo(w*0.4, h*0.28);
+  g.lineTo(w*0.5, h*0.3);
+  g.lineTo(w*0.55, h*0.42);
+  g.lineTo(w*0.62, h*0.48);
+  g.lineTo(w*0.7, h*0.54);
+  g.lineTo(w, h*0.6);
+  g.lineTo(w, h*0.65);
+  g.lineTo(0, h*0.65);
+  g.closePath(); g.fill();
+
+  // Edinburgh Castle on top of rock (stone silhouette)
+  const cx = w*0.35, cy = h*0.32;
+  g.fillStyle = '#15110f';
+  // Main keep
+  g.fillRect(cx - 30, cy - 6, 60, 20);
+  // Battlements
+  for(let i=0; i<7; i++){
+    g.fillRect(cx - 30 + i*9, cy - 14, 6, 8);
+  }
+  // Tower
+  g.fillRect(cx + 15, cy - 28, 14, 22);
+  g.fillRect(cx + 13, cy - 32, 18, 4);
+  // Tower spire
+  g.beginPath();
+  g.moveTo(cx + 15, cy - 32); g.lineTo(cx + 22, cy - 42); g.lineTo(cx + 29, cy - 32); g.closePath();
+  g.fill();
+  // Flag pole
+  g.fillRect(cx + 21, cy - 50, 1.5, 8);
+  // Saltire flag
+  g.fillStyle = '#1e3a5f';
+  g.fillRect(cx + 22, cy - 50, 12, 7);
+  g.strokeStyle = '#f1ead9';
+  g.lineWidth = 0.7;
+  g.beginPath();
+  g.moveTo(cx + 22, cy - 50); g.lineTo(cx + 34, cy - 43);
+  g.moveTo(cx + 34, cy - 50); g.lineTo(cx + 22, cy - 43);
+  g.stroke();
+
+  // Small windows lit up in castle
+  g.fillStyle = '#e8bd68';
+  for(let i=0; i<5; i++){
+    g.fillRect(cx - 25 + i*12, cy + 2, 2, 4);
+  }
+  g.fillRect(cx + 17, cy - 18, 2, 3);
+  g.fillRect(cx + 23, cy - 18, 2, 3);
+
+  // Mist over rocks
+  g.fillStyle = 'rgba(200,200,240,0.08)';
+  g.fillRect(0, h*0.5, w, h*0.15);
+  g.fillStyle = 'rgba(200,200,240,0.05)';
+  g.fillRect(0, h*0.55, w, h*0.1);
+
+  // Royal Mile — stone tenements foreground
+  g.fillStyle = '#1a1510';
+  g.fillRect(0, h*0.65, w, h*0.12);
+  // Warm lit windows
+  for(let i=0; i<18; i++){
+    g.fillStyle = 'rgba(232, 189, 104, 0.55)';
+    g.fillRect(20 + i*40, h*0.67, 8, 10);
+  }
+
+  // Cobbled street foreground
+  g.fillStyle = '#2a2220';
+  g.fillRect(0, h*0.77, w, h*0.23);
+  g.fillStyle = '#3a2f2a';
+  for(let i=0; i<w; i+=22){
+    for(let j=0; j<3; j++){
+      g.beginPath();
+      g.arc(i + (j%2)*10, h*0.82 + j*22, 5, 0, Math.PI*2);
+      g.fill();
+    }
+  }
+
+  // Lone bagpiper silhouette
+  const px = w*0.85, py = h*0.83;
+  g.fillStyle = '#0a0706';
+  // Body
+  g.fillRect(px - 3, py - 18, 6, 20);
+  // Head
+  g.beginPath(); g.arc(px, py - 24, 4, 0, Math.PI*2); g.fill();
+  // Kilt flare
+  g.beginPath();
+  g.moveTo(px - 6, py + 2); g.lineTo(px + 6, py + 2); g.lineTo(px + 8, py + 10); g.lineTo(px - 8, py + 10); g.closePath();
+  g.fill();
+  // Bagpipes
+  g.fillRect(px - 8, py - 14, 4, 6);
+  g.fillRect(px - 10, py - 20, 1, 10);
+  g.fillRect(px - 7, py - 22, 1, 10);
+
+  // Lamp post
+  g.fillStyle = '#0a0706';
+  g.fillRect(w*0.15, h*0.72, 3, h*0.23);
+  g.beginPath(); g.arc(w*0.15 + 1.5, h*0.72, 6, 0, Math.PI*2); g.fill();
+  g.fillStyle = '#e8bd68';
+  g.beginPath(); g.arc(w*0.15 + 1.5, h*0.72, 4, 0, Math.PI*2); g.fill();
+  // Lamp glow
+  cityGlow(g, w*0.15 + 1.5, h*0.72, 60, 'rgb(232, 189, 104)', 0.25);
+
+  // Distant ghost mist
+  g.fillStyle = 'rgba(241, 234, 217, 0.04)';
+  g.fillRect(0, h*0.7, w, 40);
+}
+
+// ═══════════════ DUBLIN — Ha'penny Bridge, Temple Bar neon, warm ═══════════════
+function drawDublin(g, w, h){
+  // Warm evening sky
+  const sky = g.createLinearGradient(0, 0, 0, h*0.6);
+  sky.addColorStop(0, '#1a0614');
+  sky.addColorStop(0.5, '#5a2a2e');
+  sky.addColorStop(1, '#8a4a3a');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h*0.6);
+
+  starField(g, w, h*0.35, 35);
+
+  // River Liffey (dark reflection)
+  g.fillStyle = '#0a1a1a';
+  g.fillRect(0, h*0.6, w, h*0.15);
+  // Reflected neon
+  g.fillStyle = 'rgba(236, 72, 153, 0.15)';
+  g.fillRect(0, h*0.6, w, 8);
+  g.fillStyle = 'rgba(20, 184, 166, 0.12)';
+  g.fillRect(0, h*0.63, w, 5);
+
+  // Georgian townhouses across river (distant)
+  for(let i=0; i<8; i++){
+    const bx = i*(w/8);
+    const bh = 70 + (i%3)*20;
+    g.fillStyle = ['#2a1818', '#352018', '#2a1814'][i%3];
+    g.fillRect(bx, h*0.45, w/8 - 2, bh);
+    // Lit windows
+    g.fillStyle = 'rgba(232, 189, 104, 0.7)';
+    for(let r=0; r<3; r++){
+      for(let c=0; c<4; c++){
+        if(Math.random() > 0.35){
+          g.fillRect(bx + 6 + c*((w/8-12)/4), h*0.47 + r*20, 4, 6);
+        }
+      }
+    }
+  }
+
+  // Ha'penny Bridge — iconic white iron arch
+  const bx = w*0.15, by = h*0.58;
+  g.strokeStyle = '#e8dcc0';
+  g.lineWidth = 3;
+  g.beginPath();
+  g.moveTo(bx, by + 6);
+  g.quadraticCurveTo(bx + w*0.3, by - 40, bx + w*0.6, by + 6);
+  g.stroke();
+  // Vertical supports
+  g.lineWidth = 1.2;
+  for(let i=1; i<10; i++){
+    const t = i/10;
+    const x1 = bx + t * w*0.6;
+    const yCurve = by + 6 - Math.sin(t*Math.PI) * 40;
+    g.beginPath();
+    g.moveTo(x1, yCurve); g.lineTo(x1, by + 6);
+    g.stroke();
+  }
+  // Deck
+  g.fillStyle = '#6a5540';
+  g.fillRect(bx, by + 5, w*0.6, 4);
+  // Lamps on bridge
+  g.fillStyle = '#e8bd68';
+  for(let i=0; i<4; i++){
+    g.beginPath(); g.arc(bx + (i+1)*(w*0.6)/5, by + 4, 2, 0, Math.PI*2); g.fill();
+    cityGlow(g, bx + (i+1)*(w*0.6)/5, by + 4, 15, 'rgb(232, 189, 104)', 0.4);
+  }
+
+  // Temple Bar neon sign
+  const tx = w*0.72, ty = h*0.38;
+  g.save();
+  g.shadowColor = '#ec4899';
+  g.shadowBlur = 25;
+  g.fillStyle = '#ec4899';
+  g.font = "italic 900 24px 'Playfair Display', serif";
+  g.textAlign = 'center';
+  g.fillText('TEMPLE BAR', tx, ty);
+  g.restore();
+  // Secondary line
+  g.fillStyle = 'rgba(20, 184, 166, 0.9)';
+  g.shadowColor = '#14b8a6';
+  g.shadowBlur = 12;
+  g.font = "700 10px 'JetBrains Mono', monospace";
+  g.textAlign = 'center';
+  g.fillText('◆ EST. 1840 ◆', tx, ty + 18);
+  g.shadowBlur = 0;
+
+  // Colourful Georgian doors in foreground buildings
+  g.fillStyle = '#2a1610';
+  g.fillRect(0, h*0.72, w, h*0.15);
+  const doorCols = ['#7a1a2b', '#b88940', '#0c3b2e', '#1e3a5f', '#6b1e3e', '#c97b5a', '#0c3b2e', '#7a1a2b'];
+  const totalDoors = Math.max(4, Math.floor(w / 110));
+  for(let i=0; i<totalDoors; i++){
+    const dx = (i + 0.5) * (w/totalDoors) - 16;
+    // Door
+    g.fillStyle = doorCols[i % doorCols.length];
+    g.fillRect(dx, h*0.76, 32, 44);
+    // Fanlight
+    g.fillStyle = '#e8bd68';
+    g.beginPath();
+    g.arc(dx + 16, h*0.76, 18, Math.PI, 0);
+    g.fill();
+    g.fillStyle = '#0a0706';
+    g.beginPath(); g.arc(dx + 16, h*0.76, 16, Math.PI, 0); g.fill();
+    // Glow
+    g.fillStyle = 'rgba(232, 189, 104, 0.7)';
+    g.beginPath(); g.arc(dx + 16, h*0.76, 14, Math.PI, 0); g.fill();
+    // Door handle
+    g.fillStyle = '#b88940';
+    g.beginPath(); g.arc(dx + 26, h*0.88, 1.5, 0, Math.PI*2); g.fill();
+    // Brass knocker
+    g.fillStyle = '#b88940';
+    g.fillRect(dx + 14, h*0.80, 4, 3);
+  }
+
+  // Pavement
+  g.fillStyle = '#15110f';
+  g.fillRect(0, h*0.87, w, h*0.13);
+  g.fillStyle = 'rgba(184, 137, 64, 0.05)';
+  g.fillRect(0, h*0.87, w, h*0.13);
+}
+
+// ═══════════════ LIVERPOOL — Albert Dock + Liver Building at dusk ═══════════════
+function drawLiverpool(g, w, h){
+  // Grey-blue moody dusk
+  const sky = g.createLinearGradient(0, 0, 0, h*0.6);
+  sky.addColorStop(0, '#0a0e1a');
+  sky.addColorStop(0.6, '#2a3a4a');
+  sky.addColorStop(1, '#4a5a6a');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h*0.6);
+
+  starField(g, w, h*0.35, 30);
+
+  // Mersey river
+  g.fillStyle = '#0a1420';
+  g.fillRect(0, h*0.6, w, h*0.18);
+  // Ripples
+  g.fillStyle = 'rgba(232, 189, 104, 0.08)';
+  for(let i=0; i<w; i+=30){
+    g.fillRect(i, h*0.62 + (i%3)*3, 18, 1);
+  }
+
+  // Royal Liver Building silhouette (twin clock towers)
+  const lx = w*0.35, ly = h*0.28;
+  g.fillStyle = '#0a0706';
+  // Main building body
+  g.fillRect(lx, ly, 140, 140);
+  // Side towers
+  g.fillRect(lx - 12, ly + 10, 12, 130);
+  g.fillRect(lx + 140, ly + 10, 12, 130);
+  // Twin clock towers
+  g.fillRect(lx + 20, ly - 40, 30, 40);
+  g.fillRect(lx + 90, ly - 40, 30, 40);
+  // Domes
+  g.beginPath(); g.arc(lx + 35, ly - 40, 18, Math.PI, 0); g.fill();
+  g.beginPath(); g.arc(lx + 105, ly - 40, 18, Math.PI, 0); g.fill();
+  // Liver birds on domes
+  g.beginPath();
+  g.moveTo(lx + 30, ly - 60); g.lineTo(lx + 35, ly - 68); g.lineTo(lx + 42, ly - 60);
+  g.lineTo(lx + 38, ly - 56); g.closePath(); g.fill();
+  g.beginPath();
+  g.moveTo(lx + 100, ly - 60); g.lineTo(lx + 105, ly - 68); g.lineTo(lx + 112, ly - 60);
+  g.lineTo(lx + 108, ly - 56); g.closePath(); g.fill();
+
+  // Clock faces (glowing)
+  g.fillStyle = 'rgba(232, 189, 104, 0.95)';
+  g.beginPath(); g.arc(lx + 35, ly - 22, 10, 0, Math.PI*2); g.fill();
+  g.beginPath(); g.arc(lx + 105, ly - 22, 10, 0, Math.PI*2); g.fill();
+  // Clock glow halos
+  cityGlow(g, lx + 35, ly - 22, 35, 'rgb(232, 189, 104)', 0.45);
+  cityGlow(g, lx + 105, ly - 22, 35, 'rgb(232, 189, 104)', 0.45);
+  // Clock hands
+  g.strokeStyle = '#0a0706'; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(lx + 35, ly - 22); g.lineTo(lx + 35, ly - 29); g.stroke();
+  g.beginPath(); g.moveTo(lx + 35, ly - 22); g.lineTo(lx + 41, ly - 20); g.stroke();
+  g.beginPath(); g.moveTo(lx + 105, ly - 22); g.lineTo(lx + 105, ly - 29); g.stroke();
+  g.beginPath(); g.moveTo(lx + 105, ly - 22); g.lineTo(lx + 111, ly - 20); g.stroke();
+
+  // Windows on building body
+  g.fillStyle = 'rgba(232, 189, 104, 0.5)';
+  for(let r=0; r<5; r++){
+    for(let c=0; c<8; c++){
+      if(Math.random() > 0.3) g.fillRect(lx + 10 + c*16, ly + 15 + r*25, 5, 10);
+    }
+  }
+
+  // Albert Dock warehouses (distant right)
+  const dx = w*0.72;
+  g.fillStyle = '#1a0a0a';
+  g.fillRect(dx, h*0.45, w - dx, h*0.15);
+  // Arched warehouse windows
+  for(let i=0; i<6; i++){
+    const wx = dx + 12 + i*((w - dx - 24)/6);
+    g.fillStyle = 'rgba(232, 189, 104, 0.4)';
+    g.beginPath(); g.arc(wx, h*0.52, 6, Math.PI, 0); g.fill();
+    g.fillRect(wx - 6, h*0.52, 12, 8);
+  }
+
+  // Mersey Ferry (silhouette)
+  const fx = w*0.15;
+  g.fillStyle = '#0a0706';
+  g.fillRect(fx, h*0.68, 90, 20);
+  g.fillRect(fx + 15, h*0.64, 60, 6);
+  // Smokestack
+  g.fillRect(fx + 55, h*0.58, 5, 10);
+  // Lit windows
+  g.fillStyle = 'rgba(232, 189, 104, 0.6)';
+  for(let i=0; i<6; i++){
+    g.fillRect(fx + 10 + i*12, h*0.71, 4, 6);
+  }
+  // Mast light
+  g.fillStyle = '#ec4899';
+  g.beginPath(); g.arc(fx + 57, h*0.57, 1.5, 0, Math.PI*2); g.fill();
+  cityGlow(g, fx + 57, h*0.57, 10, 'rgb(236, 72, 153)', 0.8);
+
+  // Harbour wall
+  g.fillStyle = '#15110f';
+  g.fillRect(0, h*0.78, w, h*0.22);
+  // Dock edge highlights
+  g.fillStyle = 'rgba(184, 137, 64, 0.15)';
+  g.fillRect(0, h*0.78, w, 2);
+
+  // Cobble hints
+  g.fillStyle = '#251c16';
+  for(let i=0; i<w; i+=25){
+    for(let j=0; j<3; j++){
+      g.beginPath();
+      g.arc(i + (j%2)*12, h*0.85 + j*20, 4, 0, Math.PI*2);
+      g.fill();
+    }
+  }
+
+  // Bollard
+  g.fillStyle = '#0a0706';
+  g.fillRect(w*0.1, h*0.75, 10, 20);
+  g.beginPath(); g.arc(w*0.1 + 5, h*0.75, 7, 0, Math.PI*2); g.fill();
+}
+
+// ═══════════════ MANCHESTER — Red brick, canals, rain, neon ═══════════════
+function drawManchester(g, w, h){
+  // Moody grey-purple sky
+  const sky = g.createLinearGradient(0, 0, 0, h*0.62);
+  sky.addColorStop(0, '#14101a');
+  sky.addColorStop(0.7, '#3a2a3a');
+  sky.addColorStop(1, '#5a3a3a');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h*0.62);
+
+  // Industrial chimney silhouettes
+  for(let i=0; i<4; i++){
+    const cx = (i+1) * w/5;
+    g.fillStyle = '#0a0706';
+    g.fillRect(cx - 4, h*0.08, 8, h*0.35);
+    g.fillRect(cx - 6, h*0.08, 12, 3);
+    // Smoke
+    g.fillStyle = 'rgba(200, 200, 210, 0.15)';
+    g.beginPath(); g.arc(cx, h*0.06, 16, 0, Math.PI*2); g.fill();
+    g.beginPath(); g.arc(cx + 5, h*0.03, 12, 0, Math.PI*2); g.fill();
+  }
+
+  // Red brick warehouses
+  for(let i=0; i<5; i++){
+    const bx = i * (w/5);
+    g.fillStyle = ['#3a1812', '#4a1818', '#3a1812', '#2a1010', '#4a1818'][i%5];
+    g.fillRect(bx, h*0.38, w/5 - 2, h*0.3);
+    // Arched windows
+    for(let r=0; r<3; r++){
+      for(let c=0; c<3; c++){
+        const wx = bx + 15 + c*((w/5 - 30)/3);
+        const wy = h*0.42 + r*((h*0.25)/3);
+        g.fillStyle = '#1a0a08';
+        g.beginPath(); g.arc(wx, wy, 6, Math.PI, 0); g.fill();
+        g.fillRect(wx - 6, wy, 12, 10);
+        // Warm glow some windows
+        if(Math.random() > 0.5){
+          g.fillStyle = 'rgba(232, 189, 104, 0.5)';
+          g.fillRect(wx - 5, wy + 1, 10, 8);
+        }
+      }
+    }
+  }
+
+  // Canal
+  g.fillStyle = '#0a1814';
+  g.fillRect(0, h*0.68, w, h*0.1);
+  // Canal reflections
+  g.fillStyle = 'rgba(232, 189, 104, 0.12)';
+  for(let i=0; i<w; i+=35){
+    g.fillRect(i, h*0.69 + (i%2)*3, 20, 1);
+  }
+
+  // Bridge arch
+  g.strokeStyle = '#2a1010';
+  g.lineWidth = 6;
+  g.beginPath();
+  g.arc(w*0.65, h*0.72, 40, Math.PI, 0);
+  g.stroke();
+
+  // Iron railings
+  g.strokeStyle = '#0a0706';
+  g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(0, h*0.78); g.lineTo(w, h*0.78); g.stroke();
+  for(let i=0; i<w; i+=20){
+    g.beginPath(); g.moveTo(i, h*0.78); g.lineTo(i, h*0.82); g.stroke();
+  }
+
+  // Neon MANCHESTER sign on warehouse
+  g.save();
+  g.shadowColor = '#14b8a6';
+  g.shadowBlur = 18;
+  g.fillStyle = '#14b8a6';
+  g.font = "900 22px 'Archivo Black', sans-serif";
+  g.textAlign = 'center';
+  g.fillText('MANCHESTER', w*0.28, h*0.55);
+  g.restore();
+
+  // Wet cobbled street
+  g.fillStyle = '#1a1410';
+  g.fillRect(0, h*0.82, w, h*0.18);
+  g.fillStyle = 'rgba(232, 189, 104, 0.08)';
+  g.fillRect(0, h*0.82, w, h*0.18);
+  // Puddle reflections
+  for(let i=0; i<4; i++){
+    const px = (i*260 + 60) % w;
+    const pg = g.createRadialGradient(px, h*0.92, 4, px, h*0.92, 50);
+    pg.addColorStop(0, 'rgba(20, 184, 166, 0.15)');
+    pg.addColorStop(1, 'transparent');
+    g.fillStyle = pg;
+    g.fillRect(px - 50, h*0.88, 100, 22);
+  }
+
+  // Lamp posts
+  for(let i=0; i<3; i++){
+    const lx = (i*0.4 + 0.1) * w;
+    g.fillStyle = '#0a0706';
+    g.fillRect(lx, h*0.75, 2, h*0.18);
+    g.beginPath(); g.arc(lx + 1, h*0.75, 5, 0, Math.PI*2); g.fill();
+    g.fillStyle = '#e8bd68';
+    g.beginPath(); g.arc(lx + 1, h*0.75, 3.5, 0, Math.PI*2); g.fill();
+    cityGlow(g, lx + 1, h*0.75, 40, 'rgb(232, 189, 104)', 0.3);
+  }
+
+  // Rain (always on in Manchester! it's a joke)
+  g.strokeStyle = 'rgba(184, 200, 220, 0.22)';
+  g.lineWidth = 1;
+  for(let i=0; i<60; i++){
+    const rx = (i*41 + pulsePhase*3) % w;
+    const ry = ((i*23 + pulsePhase*8) % h) * 0.75;
+    g.beginPath(); g.moveTo(rx, ry); g.lineTo(rx-3, ry+12); g.stroke();
+  }
+}
+
+// ═══════════════ OXFORD — Dreaming spires, warm honey stone, punt on river ═══════════════
+function drawOxford(g, w, h){
+  // Warm twilight sky
+  const sky = g.createLinearGradient(0, 0, 0, h*0.6);
+  sky.addColorStop(0, '#1a0e1a');
+  sky.addColorStop(0.5, '#4a2a3e');
+  sky.addColorStop(1, '#8a5a4a');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h*0.6);
+
+  starField(g, w, h*0.3, 30);
+
+  // Moon
+  g.fillStyle = 'rgba(241, 234, 217, 0.9)';
+  g.beginPath(); g.arc(w*0.18, h*0.14, 14, 0, Math.PI*2); g.fill();
+  cityGlow(g, w*0.18, h*0.14, 40, 'rgb(241, 234, 217)', 0.2);
+
+  // Gothic spires (multiple, dreaming)
+  function spire(sx, sy, spireH, w2, detail=true){
+    g.fillStyle = '#2a1a12';  // warm honey-stone tone
+    g.fillRect(sx, sy, w2, spireH);
+    // Base
+    g.fillRect(sx - 3, sy, w2 + 6, 6);
+    // Top spire
+    g.beginPath();
+    g.moveTo(sx, sy); g.lineTo(sx + w2/2, sy - spireH*0.5); g.lineTo(sx + w2, sy); g.closePath();
+    g.fill();
+    // Gold cross on top
+    g.fillStyle = '#b88940';
+    g.fillRect(sx + w2/2 - 0.5, sy - spireH*0.5 - 6, 1.5, 6);
+    g.fillRect(sx + w2/2 - 2, sy - spireH*0.5 - 4, 5, 1.5);
+    if(detail){
+      // Arched windows (lit)
+      g.fillStyle = 'rgba(232, 189, 104, 0.85)';
+      g.beginPath(); g.arc(sx + w2/2, sy + spireH*0.35, w2*0.3, Math.PI, 0); g.fill();
+      g.fillRect(sx + w2*0.2, sy + spireH*0.35, w2*0.6, spireH*0.2);
+      cityGlow(g, sx + w2/2, sy + spireH*0.4, w2*2, 'rgb(232, 189, 104)', 0.3);
+    }
+  }
+
+  spire(w*0.08, h*0.22, h*0.38, 28);
+  spire(w*0.3, h*0.16, h*0.44, 36);
+  spire(w*0.5, h*0.2, h*0.4, 30);
+  spire(w*0.68, h*0.14, h*0.46, 40);
+  spire(w*0.88, h*0.22, h*0.38, 28);
+
+  // College walls connecting spires
+  g.fillStyle = '#1a0e08';
+  g.fillRect(0, h*0.55, w, h*0.13);
+  // Arched windows in walls (warm glow)
+  for(let i=0; i<10; i++){
+    const wx = (i + 0.5) * w/10;
+    g.fillStyle = 'rgba(232, 189, 104, 0.4)';
+    g.beginPath(); g.arc(wx, h*0.58, 8, Math.PI, 0); g.fill();
+    g.fillRect(wx - 8, h*0.58, 16, 12);
+  }
+
+  // River Cherwell
+  g.fillStyle = '#0a1814';
+  g.fillRect(0, h*0.68, w, h*0.12);
+  // River moonlight shimmer
+  g.fillStyle = 'rgba(241, 234, 217, 0.08)';
+  for(let i=0; i<w; i+=25){
+    g.fillRect(i, h*0.7 + (i%2)*4, 15, 1);
+  }
+
+  // Punt boat (iconic Oxford)
+  const px = w*0.45;
+  g.fillStyle = '#2a1a12';
+  g.beginPath();
+  g.moveTo(px, h*0.74); g.lineTo(px + 80, h*0.74); g.lineTo(px + 75, h*0.78); g.lineTo(px + 5, h*0.78);
+  g.closePath(); g.fill();
+  // Punter (silhouette)
+  g.fillStyle = '#0a0706';
+  g.fillRect(px + 70, h*0.66, 3, 10);
+  g.beginPath(); g.arc(px + 71, h*0.64, 3, 0, Math.PI*2); g.fill();
+  // Pole
+  g.fillRect(px + 72, h*0.58, 1, 22);
+  // Lanterns on punt
+  g.fillStyle = '#e8bd68';
+  g.beginPath(); g.arc(px + 15, h*0.72, 2, 0, Math.PI*2); g.fill();
+  g.beginPath(); g.arc(px + 60, h*0.72, 2, 0, Math.PI*2); g.fill();
+  cityGlow(g, px + 15, h*0.72, 15, 'rgb(232, 189, 104)', 0.5);
+  cityGlow(g, px + 60, h*0.72, 15, 'rgb(232, 189, 104)', 0.5);
+
+  // Stone path foreground
+  g.fillStyle = '#2a1a12';
+  g.fillRect(0, h*0.8, w, h*0.2);
+  // Cobblestones
+  g.fillStyle = '#3a2218';
+  for(let i=0; i<w; i+=30){
+    for(let j=0; j<3; j++){
+      g.beginPath();
+      g.arc(i + (j%2)*15, h*0.84 + j*22, 6, 0, Math.PI*2);
+      g.fill();
+    }
+  }
+
+  // Bicycle leaning
+  const bx = w*0.85, by = h*0.88;
+  g.strokeStyle = '#0a0706';
+  g.lineWidth = 1.5;
+  g.beginPath(); g.arc(bx, by, 8, 0, Math.PI*2); g.stroke();
+  g.beginPath(); g.arc(bx + 20, by, 8, 0, Math.PI*2); g.stroke();
+  g.beginPath();
+  g.moveTo(bx, by); g.lineTo(bx + 10, by - 8); g.lineTo(bx + 20, by);
+  g.moveTo(bx + 10, by - 8); g.lineTo(bx + 12, by - 14);
+  g.stroke();
+  // Basket
+  g.fillStyle = '#3a2818';
+  g.fillRect(bx + 8, by - 18, 8, 4);
+}
+
+// ═══════════════ CARDIFF — Castle keep, red dragon banner, Welsh valleys ═══════════════
+function drawCardiff(g, w, h){
+  // Deep welsh twilight - green/blue
+  const sky = g.createLinearGradient(0, 0, 0, h*0.58);
+  sky.addColorStop(0, '#0a1420');
+  sky.addColorStop(0.5, '#1a4a3a');
+  sky.addColorStop(1, '#3a6a4a');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h*0.58);
+
+  starField(g, w, h*0.3, 30);
+
+  // Rolling Welsh hills silhouette
+  g.fillStyle = '#0a1a0a';
+  g.beginPath();
+  g.moveTo(0, h*0.55);
+  g.quadraticCurveTo(w*0.25, h*0.42, w*0.45, h*0.5);
+  g.quadraticCurveTo(w*0.65, h*0.58, w*0.85, h*0.48);
+  g.quadraticCurveTo(w*0.95, h*0.52, w, h*0.5);
+  g.lineTo(w, h*0.58);
+  g.lineTo(0, h*0.58);
+  g.closePath(); g.fill();
+
+  // Cardiff Castle on motte
+  const cx = w*0.32, cy = h*0.42;
+  // Motte (grassy mound)
+  g.fillStyle = '#1a2818';
+  g.beginPath();
+  g.moveTo(cx - 70, h*0.58);
+  g.quadraticCurveTo(cx, h*0.32, cx + 70, h*0.58);
+  g.closePath(); g.fill();
+
+  // Keep
+  g.fillStyle = '#1a1410';
+  g.fillRect(cx - 28, cy, 56, 60);
+  // Battlements
+  for(let i=0; i<5; i++){
+    g.fillRect(cx - 28 + i*12, cy - 8, 8, 8);
+  }
+  // Windows (arrow slits, glowing)
+  g.fillStyle = '#e8bd68';
+  for(let i=0; i<3; i++){
+    g.fillRect(cx - 18 + i*16, cy + 15, 2, 8);
+  }
+  // Arched doorway
+  g.fillStyle = '#0a0706';
+  g.beginPath(); g.arc(cx, cy + 55, 7, Math.PI, 0); g.fill();
+  g.fillRect(cx - 7, cy + 55, 14, 8);
+  g.fillStyle = 'rgba(232, 189, 104, 0.6)';
+  g.beginPath(); g.arc(cx, cy + 55, 5, Math.PI, 0); g.fill();
+  // Keep glow
+  cityGlow(g, cx, cy + 30, 80, 'rgb(232, 189, 104)', 0.2);
+
+  // Castle walls
+  g.fillStyle = '#15110f';
+  g.fillRect(w*0.1, h*0.54, 280, 16);
+  for(let i=0; i<12; i++){
+    g.fillRect(w*0.1 + i*24, h*0.52, 14, 6);
+  }
+
+  // MASSIVE Welsh flag — the dragon
+  const fx = w*0.72, fy = h*0.2;
+  g.fillStyle = '#f1ead9';
+  g.fillRect(fx, fy, 160, 50);
+  g.fillStyle = '#1a5e3a';
+  g.fillRect(fx, fy + 50, 160, 50);
+  // Red dragon (stylised silhouette)
+  g.fillStyle = '#a32b3d';
+  g.beginPath();
+  // Body
+  g.moveTo(fx + 30, fy + 50);
+  g.lineTo(fx + 45, fy + 40);
+  g.lineTo(fx + 70, fy + 32);
+  g.lineTo(fx + 95, fy + 30);
+  g.lineTo(fx + 110, fy + 35);
+  g.lineTo(fx + 130, fy + 40);
+  // Head
+  g.lineTo(fx + 145, fy + 38);
+  g.lineTo(fx + 150, fy + 48);
+  g.lineTo(fx + 140, fy + 52);
+  g.lineTo(fx + 145, fy + 55);
+  g.lineTo(fx + 135, fy + 60);
+  // Tail
+  g.lineTo(fx + 125, fy + 58);
+  g.lineTo(fx + 100, fy + 60);
+  g.lineTo(fx + 75, fy + 58);
+  g.lineTo(fx + 50, fy + 55);
+  g.lineTo(fx + 35, fy + 62);
+  g.closePath();
+  g.fill();
+  // Flagpole
+  g.fillStyle = '#0a0706';
+  g.fillRect(fx - 3, fy - 5, 3, 105);
+  // Flag shadow
+  g.fillStyle = 'rgba(0,0,0,0.3)';
+  g.fillRect(fx, fy, 160, 2);
+  g.fillStyle = 'rgba(0,0,0,0.3)';
+  g.fillRect(fx + 158, fy, 3, 100);
+
+  // Principality Stadium roof (distant)
+  const sx = w*0.55, sy = h*0.48;
+  g.fillStyle = '#2a2a2e';
+  g.fillRect(sx, sy, 100, 16);
+  g.strokeStyle = '#3a3a3e';
+  g.lineWidth = 1;
+  for(let i=0; i<5; i++){
+    g.beginPath();
+    g.moveTo(sx, sy); g.quadraticCurveTo(sx + 50, sy - 30 + i*4, sx + 100, sy);
+    g.stroke();
+  }
+
+  // Ground
+  g.fillStyle = '#0a1510';
+  g.fillRect(0, h*0.68, w, h*0.32);
+  // Grass hints
+  g.strokeStyle = '#1a3a20';
+  g.lineWidth = 1;
+  for(let i=0; i<80; i++){
+    const gx = Math.random()*w;
+    const gy = h*0.75 + Math.random()*h*0.23;
+    g.beginPath(); g.moveTo(gx, gy); g.lineTo(gx, gy - 4); g.stroke();
+  }
+
+  // Daffodils
+  for(let i=0; i<8; i++){
+    const dx = (i*140 + 60) % w;
+    g.strokeStyle = '#1a5e3a'; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(dx, h*0.92); g.lineTo(dx, h*0.96); g.stroke();
+    g.fillStyle = '#e8bd68';
+    g.beginPath(); g.arc(dx, h*0.91, 4, 0, Math.PI*2); g.fill();
+    g.fillStyle = '#f0c860';
+    g.fillRect(dx - 1, h*0.90, 2, 2);
+  }
+}
+
+// ═══════════════ BRIGHTON — Palace Pier, Royal Pavilion, seaside neon ═══════════════
+function drawBrighton(g, w, h){
+  // Magenta sunset
+  const sky = g.createLinearGradient(0, 0, 0, h*0.55);
+  sky.addColorStop(0, '#1a0a1a');
+  sky.addColorStop(0.4, '#6a1e4a');
+  sky.addColorStop(0.8, '#c95e5a');
+  sky.addColorStop(1, '#e8bd68');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h*0.55);
+
+  starField(g, w, h*0.25, 25);
+
+  // Setting sun on horizon
+  g.fillStyle = '#ec4899';
+  g.beginPath(); g.arc(w*0.8, h*0.55, 40, 0, Math.PI*2); g.fill();
+  cityGlow(g, w*0.8, h*0.55, 150, 'rgb(236, 72, 153)', 0.3);
+
+  // Sea
+  g.fillStyle = '#1a2a4a';
+  g.fillRect(0, h*0.55, w, h*0.2);
+  // Sun reflection on water
+  g.fillStyle = 'rgba(236, 72, 153, 0.35)';
+  g.fillRect(w*0.75, h*0.55, 90, h*0.2);
+  // Wave highlights
+  g.fillStyle = 'rgba(241, 234, 217, 0.15)';
+  for(let i=0; i<w; i+=30){
+    g.fillRect(i, h*0.58 + (i%4)*3, 20, 1);
+    g.fillRect(i+10, h*0.65 + (i%3)*4, 15, 1);
+  }
+
+  // Royal Pavilion (distant left, silhouette with onion domes)
+  const rpx = w*0.05, rpy = h*0.4;
+  g.fillStyle = '#0a0706';
+  g.fillRect(rpx, rpy, 140, 50);
+  // Central big dome
+  g.beginPath(); g.arc(rpx + 70, rpy, 30, Math.PI, 0); g.fill();
+  // Onion top
+  g.beginPath();
+  g.moveTo(rpx + 70, rpy - 30);
+  g.quadraticCurveTo(rpx + 82, rpy - 48, rpx + 70, rpy - 58);
+  g.quadraticCurveTo(rpx + 58, rpy - 48, rpx + 70, rpy - 30);
+  g.closePath(); g.fill();
+  // Side smaller domes
+  g.beginPath(); g.arc(rpx + 25, rpy + 8, 18, Math.PI, 0); g.fill();
+  g.beginPath(); g.arc(rpx + 115, rpy + 8, 18, Math.PI, 0); g.fill();
+  // Minaret spikes
+  for(let i=0; i<2; i++){
+    const mx = rpx + (i ? 130 : 10);
+    g.fillRect(mx, rpy - 15, 2.5, 25);
+    g.beginPath();
+    g.moveTo(mx, rpy - 15); g.lineTo(mx + 1.25, rpy - 28); g.lineTo(mx + 2.5, rpy - 15);
+    g.closePath(); g.fill();
+  }
+  // Lit windows
+  g.fillStyle = 'rgba(232, 189, 104, 0.6)';
+  for(let i=0; i<5; i++){
+    g.fillRect(rpx + 20 + i*24, rpy + 20, 4, 10);
+  }
+
+  // Palace Pier (the main feature!)
+  const pyx = w*0.3, pyy = h*0.66;
+  // Pier pillars going into sea
+  g.fillStyle = '#1a0a08';
+  for(let i=0; i<16; i++){
+    g.fillRect(pyx + i*20, pyy, 3, 25);
+  }
+  // Pier deck
+  g.fillStyle = '#2a1a12';
+  g.fillRect(pyx - 10, pyy - 6, 340, 8);
+  // Pavilion at end of pier
+  const pend = pyx + 280;
+  g.fillStyle = '#1a0e08';
+  g.fillRect(pend, pyy - 60, 60, 58);
+  // Pavilion roof
+  g.fillStyle = '#a32b3d';
+  g.beginPath();
+  g.moveTo(pend, pyy - 60); g.lineTo(pend + 30, pyy - 85); g.lineTo(pend + 60, pyy - 60);
+  g.closePath(); g.fill();
+  // Lit pavilion windows
+  g.fillStyle = 'rgba(232, 189, 104, 0.9)';
+  for(let i=0; i<3; i++){
+    for(let j=0; j<2; j++){
+      g.fillRect(pend + 6 + i*18, pyy - 50 + j*22, 12, 12);
+    }
+  }
+  cityGlow(g, pend + 30, pyy - 30, 80, 'rgb(232, 189, 104)', 0.3);
+
+  // Ferris wheel on pier
+  const fwx = pyx + 120, fwy = pyy - 50;
+  g.strokeStyle = '#b88940';
+  g.lineWidth = 1.5;
+  g.beginPath(); g.arc(fwx, fwy, 40, 0, Math.PI*2); g.stroke();
+  for(let i=0; i<16; i++){
+    const a = (i/16)*Math.PI*2;
+    g.beginPath();
+    g.moveTo(fwx, fwy);
+    g.lineTo(fwx + Math.cos(a)*40, fwy + Math.sin(a)*40);
+    g.stroke();
+    // Coloured cabins
+    const colours = ['#ec4899', '#14b8a6', '#e8bd68', '#c97b5a'];
+    g.fillStyle = colours[i % 4];
+    g.beginPath();
+    g.arc(fwx + Math.cos(a)*40, fwy + Math.sin(a)*40, 3.5, 0, Math.PI*2);
+    g.fill();
+  }
+  // Support
+  g.fillStyle = '#2a1a12';
+  g.fillRect(fwx - 2, fwy, 4, pyy - fwy);
+
+  // Neon pier signage
+  g.save();
+  g.shadowColor = '#ec4899';
+  g.shadowBlur = 18;
+  g.fillStyle = '#ec4899';
+  g.font = "italic 900 16px 'Playfair Display', serif";
+  g.textAlign = 'center';
+  g.fillText('PALACE PIER', pend + 30, pyy - 92);
+  g.restore();
+
+  // Pebble beach
+  g.fillStyle = '#2a2218';
+  g.fillRect(0, h*0.75, w, h*0.25);
+  // Pebble dots
+  for(let i=0; i<300; i++){
+    const grey = 90 + Math.random() * 80;
+    g.fillStyle = `rgb(${grey}, ${grey - 10}, ${grey - 25})`;
+    g.beginPath();
+    g.arc(Math.random()*w, h*0.78 + Math.random()*h*0.22, 1 + Math.random(), 0, Math.PI*2);
+    g.fill();
+  }
+
+  // Beach huts
+  const hutColours = ['#ec4899', '#e8bd68', '#14b8a6', '#c97b5a', '#7a1a2b', '#6b3d6e'];
+  for(let i=0; i<6; i++){
+    const hx = 40 + i*(w/7);
+    g.fillStyle = hutColours[i % hutColours.length];
+    g.fillRect(hx, h*0.86, 36, 22);
+    // Roof
+    g.fillStyle = '#0a0706';
+    g.beginPath();
+    g.moveTo(hx - 3, h*0.86); g.lineTo(hx + 18, h*0.82); g.lineTo(hx + 39, h*0.86);
+    g.closePath(); g.fill();
+    // Door
+    g.fillStyle = '#0a0706';
+    g.fillRect(hx + 13, h*0.90, 10, 16);
+  }
+
+  // Seagulls
+  g.strokeStyle = '#f1ead9';
+  g.lineWidth = 1.2;
+  for(let i=0; i<6; i++){
+    const gx = 150 + i*150, gy = h*0.15 + (i%2)*25;
+    g.beginPath();
+    g.moveTo(gx - 6, gy); g.quadraticCurveTo(gx - 3, gy - 4, gx, gy);
+    g.quadraticCurveTo(gx + 3, gy - 4, gx + 6, gy);
+    g.stroke();
+  }
+}
+
+// ═══════════════ BIRMINGHAM — Bullring silver disc, canals, industrial ═══════════════
+function drawBirmingham(g, w, h){
+  // Industrial sky
+  const sky = g.createLinearGradient(0, 0, 0, h*0.58);
+  sky.addColorStop(0, '#0e0a0e');
+  sky.addColorStop(0.6, '#2e1e2a');
+  sky.addColorStop(1, '#5e4a3a');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h*0.58);
+
+  starField(g, w, h*0.3, 25);
+
+  // Industrial chimneys (Peaky Blinders vibes)
+  for(let i=0; i<5; i++){
+    const chx = 80 + i*((w-160)/4);
+    g.fillStyle = '#0a0706';
+    g.fillRect(chx, h*0.15, 10, h*0.3);
+    g.fillRect(chx - 3, h*0.15, 16, 4);
+    // Smoke trail
+    g.fillStyle = 'rgba(200, 180, 180, 0.15)';
+    g.beginPath(); g.arc(chx + 5, h*0.13, 14, 0, Math.PI*2); g.fill();
+    g.beginPath(); g.arc(chx + 10, h*0.09, 10, 0, Math.PI*2); g.fill();
+  }
+
+  // Bullring silver disc (iconic)
+  const bx = w*0.25, by = h*0.42;
+  g.fillStyle = '#b0b0b8';
+  g.beginPath(); g.ellipse(bx, by, 90, 35, 0, 0, Math.PI*2); g.fill();
+  // Shadow band
+  g.fillStyle = 'rgba(0,0,0,0.3)';
+  g.beginPath(); g.ellipse(bx, by + 6, 90, 30, 0, 0, Math.PI); g.fill();
+  // Disc scales pattern
+  g.fillStyle = '#808088';
+  for(let r=0; r<6; r++){
+    for(let c=0; c<15; c++){
+      const dx = bx - 80 + c*11;
+      const dy = by - 25 + r*10;
+      g.beginPath(); g.arc(dx, dy, 1.5, 0, Math.PI*2); g.fill();
+    }
+  }
+  // Gleam highlights
+  g.fillStyle = 'rgba(241, 234, 217, 0.3)';
+  g.beginPath(); g.ellipse(bx - 30, by - 15, 25, 6, 0, 0, Math.PI*2); g.fill();
+
+  // Red brick factory buildings
+  g.fillStyle = '#3a1812';
+  g.fillRect(0, h*0.45, w, h*0.2);
+  for(let i=0; i<6; i++){
+    const bx = i*(w/6);
+    g.fillStyle = ['#3a1812', '#4a2018', '#3a1812', '#2a1010'][i%4];
+    g.fillRect(bx, h*0.45, w/6 - 2, h*0.18);
+    // Large factory windows
+    for(let r=0; r<2; r++){
+      for(let c=0; c<3; c++){
+        const wx = bx + 10 + c*((w/6 - 20)/3);
+        const wy = h*0.48 + r*((h*0.14)/2);
+        g.fillStyle = '#1a0808';
+        g.fillRect(wx, wy, (w/6 - 20)/3 - 4, (h*0.14)/2 - 4);
+        // Warm glow
+        if(Math.random() > 0.35){
+          g.fillStyle = 'rgba(232, 189, 104, 0.45)';
+          g.fillRect(wx + 2, wy + 2, (w/6 - 20)/3 - 8, (h*0.14)/2 - 8);
+        }
+      }
+    }
+  }
+
+  // Canal (Birmingham has more canals than Venice!)
+  g.fillStyle = '#0a1814';
+  g.fillRect(0, h*0.65, w, h*0.1);
+  g.fillStyle = 'rgba(232, 189, 104, 0.1)';
+  for(let i=0; i<w; i+=28){
+    g.fillRect(i, h*0.67 + (i%2)*3, 16, 1);
+  }
+
+  // Narrow boat (canal boat) — The Rosie
+  const nbx = w*0.55;
+  g.fillStyle = '#1a5e3a';  // deep green
+  g.fillRect(nbx, h*0.68, 160, 16);
+  // Red trim
+  g.fillStyle = '#a32b3d';
+  g.fillRect(nbx + 15, h*0.66, 130, 6);
+  // Cabin top
+  g.fillStyle = '#7a1a2b';
+  g.fillRect(nbx + 60, h*0.62, 70, 8);
+  // Chimney
+  g.fillStyle = '#0a0706';
+  g.fillRect(nbx + 115, h*0.58, 4, 6);
+  // Smoke
+  g.fillStyle = 'rgba(220, 220, 220, 0.4)';
+  g.beginPath(); g.arc(nbx + 117, h*0.56, 5, 0, Math.PI*2); g.fill();
+  // Boat name "THE ROSIE" painted
+  g.fillStyle = '#e8bd68';
+  g.font = "italic 700 9px 'Playfair Display', serif";
+  g.textAlign = 'center';
+  g.fillText('The Rosie', nbx + 95, h*0.70);
+  // Rope trim
+  g.fillStyle = '#b88940';
+  g.fillRect(nbx, h*0.68, 160, 1.5);
+  // Round porthole windows
+  g.fillStyle = 'rgba(232, 189, 104, 0.8)';
+  for(let i=0; i<4; i++){
+    g.beginPath(); g.arc(nbx + 68 + i*14, h*0.66, 2, 0, Math.PI*2); g.fill();
+  }
+
+  // Canal wall
+  g.fillStyle = '#1a1008';
+  g.fillRect(0, h*0.75, w, 5);
+
+  // Towpath (cobbled)
+  g.fillStyle = '#1a0e08';
+  g.fillRect(0, h*0.8, w, h*0.2);
+  g.fillStyle = '#2a1810';
+  for(let i=0; i<w; i+=28){
+    for(let j=0; j<3; j++){
+      g.beginPath();
+      g.arc(i + (j%2)*14, h*0.84 + j*20, 5, 0, Math.PI*2);
+      g.fill();
+    }
+  }
+
+  // Lamp reflection on canal
+  g.fillStyle = '#0a0706';
+  g.fillRect(w*0.1, h*0.75, 2, h*0.2);
+  g.beginPath(); g.arc(w*0.1 + 1, h*0.75, 5, 0, Math.PI*2); g.fill();
+  g.fillStyle = '#e8bd68';
+  g.beginPath(); g.arc(w*0.1 + 1, h*0.75, 3, 0, Math.PI*2); g.fill();
+  cityGlow(g, w*0.1 + 1, h*0.75, 50, 'rgb(232, 189, 104)', 0.3);
+}
+
+// ═══════════════ NEWCASTLE — Tyne Bridge arch, Quayside neon ═══════════════
+function drawNewcastle(g, w, h){
+  // Northern moody teal night
+  const sky = g.createLinearGradient(0, 0, 0, h*0.58);
+  sky.addColorStop(0, '#050814');
+  sky.addColorStop(0.6, '#1a2a3e');
+  sky.addColorStop(1, '#3a3a3e');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h*0.58);
+
+  starField(g, w, h*0.3, 30);
+
+  // Tyne river
+  g.fillStyle = '#0a1018';
+  g.fillRect(0, h*0.58, w, h*0.2);
+  // Neon reflections in water
+  g.fillStyle = 'rgba(20, 184, 166, 0.15)';
+  g.fillRect(0, h*0.58, w, 8);
+  g.fillStyle = 'rgba(236, 72, 153, 0.12)';
+  g.fillRect(0, h*0.63, w, 5);
+  // Ripples
+  g.fillStyle = 'rgba(232, 189, 104, 0.08)';
+  for(let i=0; i<w; i+=25){
+    g.fillRect(i, h*0.68 + (i%2)*3, 14, 1);
+  }
+
+  // TYNE BRIDGE — iconic green steel arch
+  const tbx = w*0.1, tby = h*0.58;
+  const tbw = w*0.65;
+  g.strokeStyle = '#1a6b52';  // darker green in night
+  g.lineWidth = 14;
+  g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(tbx, tby); g.quadraticCurveTo(tbx + tbw/2, tby - 160, tbx + tbw, tby);
+  g.stroke();
+  // Inner arch detail
+  g.strokeStyle = '#0c3b2e';
+  g.lineWidth = 4;
+  g.beginPath();
+  g.moveTo(tbx, tby); g.quadraticCurveTo(tbx + tbw/2, tby - 155, tbx + tbw, tby);
+  g.stroke();
+  g.lineCap = 'butt';
+  // Suspension cables
+  g.strokeStyle = '#2a5a48';
+  g.lineWidth = 1.5;
+  for(let i=1; i<13; i++){
+    const t = i/13;
+    const bridgeTop = tby - 160 * (4*t*(1-t));
+    g.beginPath();
+    g.moveTo(tbx + t*tbw, bridgeTop); g.lineTo(tbx + t*tbw, tby);
+    g.stroke();
+  }
+  // Bridge deck
+  g.fillStyle = '#1a1410';
+  g.fillRect(tbx - 5, tby - 4, tbw + 10, 8);
+  // Bridge towers
+  g.fillStyle = '#2a1a12';
+  g.fillRect(tbx - 8, tby - 12, 16, 24);
+  g.fillRect(tbx + tbw - 8, tby - 12, 16, 24);
+
+  // Millennium Bridge (distant right)
+  const mbx = w*0.8;
+  g.strokeStyle = '#b0b0b8';
+  g.lineWidth = 6;
+  g.beginPath();
+  g.moveTo(mbx, h*0.58); g.quadraticCurveTo(mbx + 60, h*0.46, mbx + 120, h*0.58);
+  g.stroke();
+  g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(mbx, h*0.58); g.quadraticCurveTo(mbx + 60, h*0.55, mbx + 120, h*0.58);
+  g.stroke();
+
+  // Quayside buildings with neon
+  for(let i=0; i<8; i++){
+    const bx = i*(w/8);
+    g.fillStyle = ['#0a0614', '#140a18', '#0a0814'][i%3];
+    g.fillRect(bx, h*0.35, w/8 - 2, h*0.22);
+    // Warm windows
+    for(let r=0; r<4; r++){
+      for(let c=0; c<3; c++){
+        if(Math.random() > 0.4){
+          g.fillStyle = 'rgba(232, 189, 104, 0.65)';
+          g.fillRect(bx + 8 + c*((w/8-16)/3), h*0.37 + r*((h*0.18)/4), 5, 8);
+        }
+      }
+    }
+  }
+
+  // Neon signs along quayside
+  g.save();
+  g.shadowColor = '#ec4899';
+  g.shadowBlur = 15;
+  g.fillStyle = '#ec4899';
+  g.font = "italic 900 18px 'Playfair Display', serif";
+  g.textAlign = 'center';
+  g.fillText('BAR', w*0.15, h*0.43);
+  g.restore();
+  g.save();
+  g.shadowColor = '#14b8a6';
+  g.shadowBlur = 15;
+  g.fillStyle = '#14b8a6';
+  g.font = "900 16px 'Archivo Black', sans-serif";
+  g.textAlign = 'center';
+  g.fillText('CLUB', w*0.4, h*0.4);
+  g.restore();
+  g.save();
+  g.shadowColor = '#e8bd68';
+  g.shadowBlur = 18;
+  g.fillStyle = '#e8bd68';
+  g.font = "italic 900 20px 'Playfair Display', serif";
+  g.textAlign = 'center';
+  g.fillText('THE TOON', w*0.88, h*0.42);
+  g.restore();
+
+  // Quayside walkway foreground
+  g.fillStyle = '#1a1008';
+  g.fillRect(0, h*0.78, w, h*0.22);
+  // Cobbles
+  g.fillStyle = '#2a1810';
+  for(let i=0; i<w; i+=26){
+    for(let j=0; j<3; j++){
+      g.beginPath();
+      g.arc(i + (j%2)*13, h*0.82 + j*20, 4, 0, Math.PI*2);
+      g.fill();
+    }
+  }
+
+  // Lamp post with strong glow
+  g.fillStyle = '#0a0706';
+  g.fillRect(w*0.7, h*0.75, 2, h*0.2);
+  g.beginPath(); g.arc(w*0.7 + 1, h*0.75, 6, 0, Math.PI*2); g.fill();
+  g.fillStyle = '#e8bd68';
+  g.beginPath(); g.arc(w*0.7 + 1, h*0.75, 4, 0, Math.PI*2); g.fill();
+  cityGlow(g, w*0.7 + 1, h*0.75, 55, 'rgb(232, 189, 104)', 0.35);
+}
+
+// ═══════════════ GLASGOW — Red sandstone tenements, SSE Hydro armadillo ═══════════════
+function drawGlasgow(g, w, h){
+  // Moody grey-purple sky
+  const sky = g.createLinearGradient(0, 0, 0, h*0.58);
+  sky.addColorStop(0, '#0e0814');
+  sky.addColorStop(0.6, '#2a1a2e');
+  sky.addColorStop(1, '#4a3a3a');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h*0.58);
+
+  starField(g, w, h*0.3, 25);
+
+  // SSE Hydro (Armadillo building) — curved silver dome
+  const hx = w*0.7, hy = h*0.48;
+  g.fillStyle = '#808088';
+  g.beginPath();
+  g.moveTo(hx - 100, hy);
+  g.quadraticCurveTo(hx, hy - 70, hx + 100, hy);
+  g.closePath(); g.fill();
+  // Segmented lines
+  g.strokeStyle = '#606068';
+  g.lineWidth = 1;
+  for(let i=1; i<12; i++){
+    const t = i/12;
+    const px = hx - 100 + t*200;
+    const py = hy - 70 * 4*t*(1-t);
+    g.beginPath(); g.moveTo(px, hy); g.lineTo(px, py); g.stroke();
+  }
+  // Highlight gleam
+  g.fillStyle = 'rgba(241, 234, 217, 0.2)';
+  g.beginPath();
+  g.moveTo(hx - 80, hy);
+  g.quadraticCurveTo(hx - 30, hy - 55, hx + 20, hy - 15);
+  g.quadraticCurveTo(hx - 40, hy - 40, hx - 80, hy);
+  g.fill();
+
+  // Red sandstone tenement buildings
+  const tenCols = ['#5e1e1e', '#6e2818', '#5a1a14', '#7e2e20'];
+  for(let i=0; i<6; i++){
+    const bx = i*(w/6);
+    g.fillStyle = tenCols[i % tenCols.length];
+    g.fillRect(bx, h*0.42, w/6 - 3, h*0.23);
+    // Stone courses (horizontal lines)
+    g.strokeStyle = 'rgba(0,0,0,0.3)';
+    g.lineWidth = 0.5;
+    for(let r=1; r<8; r++){
+      g.beginPath();
+      g.moveTo(bx, h*0.42 + r*(h*0.2)/7);
+      g.lineTo(bx + w/6 - 3, h*0.42 + r*(h*0.2)/7);
+      g.stroke();
+    }
+    // Bay windows (Glasgow signature)
+    g.fillStyle = '#3e1010';
+    g.fillRect(bx + 8, h*0.48, (w/6)*0.35, h*0.12);
+    // Sash windows
+    for(let r=0; r<3; r++){
+      for(let c=0; c<2; c++){
+        const wx = bx + (w/6)*0.45 + c*15;
+        const wy = h*0.45 + r*((h*0.18)/3);
+        g.fillStyle = '#0a0706';
+        g.fillRect(wx, wy, 10, 14);
+        if(Math.random() > 0.35){
+          g.fillStyle = 'rgba(232, 189, 104, 0.55)';
+          g.fillRect(wx + 1, wy + 1, 8, 12);
+        }
+        // Sash bar
+        g.fillStyle = tenCols[i % tenCols.length];
+        g.fillRect(wx, wy + 7, 10, 0.8);
+      }
+    }
+    // Bay window glow
+    g.fillStyle = 'rgba(232, 189, 104, 0.3)';
+    g.fillRect(bx + 10, h*0.50, (w/6)*0.31, h*0.08);
+  }
+
+  // River Clyde
+  g.fillStyle = '#0a1820';
+  g.fillRect(0, h*0.65, w, h*0.12);
+  g.fillStyle = 'rgba(184, 137, 64, 0.08)';
+  for(let i=0; i<w; i+=32){
+    g.fillRect(i, h*0.67 + (i%2)*3, 18, 1);
+  }
+
+  // Street art mural on left wall
+  const mx = w*0.05, my = h*0.48;
+  g.fillStyle = '#e8bd68';
+  g.fillRect(mx, my, 110, 80);
+  g.fillStyle = '#ec4899';
+  g.beginPath(); g.arc(mx + 35, my + 35, 15, 0, Math.PI*2); g.fill();
+  g.fillStyle = '#14b8a6';
+  g.fillRect(mx + 55, my + 15, 40, 25);
+  g.fillStyle = '#7a1a2b';
+  g.beginPath();
+  g.moveTo(mx + 10, my + 55); g.lineTo(mx + 55, my + 50); g.lineTo(mx + 35, my + 75);
+  g.closePath(); g.fill();
+  g.fillStyle = '#0a0706';
+  g.font = "900 12px 'Archivo Black', sans-serif";
+  g.textAlign = 'center';
+  g.fillText('GLASGOW', mx + 55, my + 70);
+
+  // Pavement
+  g.fillStyle = '#1a0e0a';
+  g.fillRect(0, h*0.77, w, h*0.23);
+  // Slabs
+  g.strokeStyle = '#0a0706';
+  g.lineWidth = 1;
+  for(let i=0; i<w; i+=70){
+    g.beginPath(); g.moveTo(i, h*0.77); g.lineTo(i, h); g.stroke();
+  }
+  for(let j=0; j<5; j++){
+    g.beginPath();
+    g.moveTo(0, h*0.77 + j*h*0.05);
+    g.lineTo(w, h*0.77 + j*h*0.05);
+    g.stroke();
+  }
+
+  // Lamp post
+  g.fillStyle = '#0a0706';
+  g.fillRect(w*0.4, h*0.72, 2, h*0.23);
+  g.beginPath(); g.arc(w*0.4 + 1, h*0.72, 6, 0, Math.PI*2); g.fill();
+  g.fillStyle = '#e8bd68';
+  g.beginPath(); g.arc(w*0.4 + 1, h*0.72, 4, 0, Math.PI*2); g.fill();
+  cityGlow(g, w*0.4 + 1, h*0.72, 55, 'rgb(232, 189, 104)', 0.3);
+}
+
+// ═══════════════ BELFAST — Titanic Quarter, yellow Samson & Goliath cranes ═══════════════
+function drawBelfast(g, w, h){
+  // Industrial grey-blue night
+  const sky = g.createLinearGradient(0, 0, 0, h*0.6);
+  sky.addColorStop(0, '#0a0a14');
+  sky.addColorStop(0.6, '#2a2a3e');
+  sky.addColorStop(1, '#4a4a5a');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h*0.6);
+
+  starField(g, w, h*0.35, 30);
+
+  // Dock water
+  g.fillStyle = '#0a1420';
+  g.fillRect(0, h*0.6, w, h*0.2);
+  g.fillStyle = 'rgba(245, 197, 66, 0.1)';
+  for(let i=0; i<w; i+=30){
+    g.fillRect(i, h*0.62 + (i%2)*3, 20, 1);
+  }
+
+  // Samson & Goliath yellow cranes (iconic Belfast)
+  function yellowCrane(cx){
+    // A-frame legs
+    g.strokeStyle = '#f5c542';
+    g.lineWidth = 7;
+    g.beginPath(); g.moveTo(cx - 60, h*0.6); g.lineTo(cx - 10, h*0.15); g.stroke();
+    g.beginPath(); g.moveTo(cx + 60, h*0.6); g.lineTo(cx + 10, h*0.15); g.stroke();
+    // Base crossbeam
+    g.beginPath(); g.moveTo(cx - 40, h*0.6); g.lineTo(cx + 40, h*0.6); g.stroke();
+    // Cross braces
+    g.lineWidth = 2.5;
+    for(let i=1; i<5; i++){
+      const y = h*0.6 - (i/5) * (h*0.45);
+      const spread = 50 * (1 - i/5) + 10;
+      g.beginPath(); g.moveTo(cx - spread, y); g.lineTo(cx + spread, y); g.stroke();
+    }
+    // Top horizontal arm
+    g.lineWidth = 10;
+    g.beginPath(); g.moveTo(cx - 90, h*0.15); g.lineTo(cx + 90, h*0.15); g.stroke();
+    // Label
+    g.fillStyle = '#0a0706';
+    g.font = "900 12px 'Archivo Black', sans-serif";
+    g.textAlign = 'center';
+    g.fillText('H&W', cx, h*0.185);
+    // Warning lights on crane top
+    g.fillStyle = '#ec4899';
+    g.beginPath(); g.arc(cx, h*0.14, 2, 0, Math.PI*2); g.fill();
+    cityGlow(g, cx, h*0.14, 15, 'rgb(236, 72, 153)', 0.8);
+  }
+  yellowCrane(w*0.25);
+  yellowCrane(w*0.5);
+
+  // Titanic Museum (angular prow-shaped building)
+  const tx = w*0.72;
+  g.fillStyle = '#1a2838';
+  for(let i=0; i<4; i++){
+    const px = tx + i*45;
+    g.beginPath();
+    g.moveTo(px, h*0.6);
+    g.lineTo(px + 8, h*0.35);
+    g.lineTo(px + 32, h*0.35);
+    g.lineTo(px + 40, h*0.6);
+    g.closePath();
+    g.fill();
+    // Metallic edge
+    g.strokeStyle = '#3a4a5a';
+    g.lineWidth = 1;
+    g.stroke();
+    // Lit panels
+    g.fillStyle = 'rgba(20, 184, 166, 0.55)';
+    g.fillRect(px + 11, h*0.4, 18, 6);
+    g.fillStyle = 'rgba(232, 189, 104, 0.5)';
+    g.fillRect(px + 11, h*0.48, 18, 6);
+  }
+
+  // Ship silhouette on horizon
+  g.fillStyle = '#0a0706';
+  g.fillRect(w*0.02, h*0.56, 120, 12);
+  // Hull
+  g.beginPath();
+  g.moveTo(w*0.02, h*0.56); g.lineTo(w*0.02 + 120, h*0.56);
+  g.lineTo(w*0.02 + 115, h*0.58); g.lineTo(w*0.02 + 8, h*0.58); g.closePath();
+  g.fill();
+  // Superstructure
+  g.fillRect(w*0.02 + 20, h*0.5, 50, 8);
+  // Two funnels
+  g.fillRect(w*0.02 + 30, h*0.46, 6, 8);
+  g.fillRect(w*0.02 + 50, h*0.46, 6, 8);
+  // Funnel stripe (White Star Line gold)
+  g.fillStyle = '#f5c542';
+  g.fillRect(w*0.02 + 30, h*0.48, 6, 2);
+  g.fillRect(w*0.02 + 50, h*0.48, 6, 2);
+  // Lit portholes
+  g.fillStyle = 'rgba(232, 189, 104, 0.6)';
+  for(let i=0; i<10; i++){
+    g.fillRect(w*0.02 + 10 + i*10, h*0.57, 1.5, 1.5);
+  }
+
+  // Dock (foreground)
+  g.fillStyle = '#1a1008';
+  g.fillRect(0, h*0.8, w, h*0.2);
+  // Planks
+  g.strokeStyle = '#0a0706';
+  g.lineWidth = 1;
+  for(let i=0; i<w; i+=45){
+    g.beginPath(); g.moveTo(i, h*0.8); g.lineTo(i, h); g.stroke();
+  }
+
+  // Shipping crate
+  g.fillStyle = '#5a2818';
+  g.fillRect(w*0.06, h*0.85, 70, 50);
+  g.strokeStyle = '#3a1810';
+  g.lineWidth = 2;
+  g.strokeRect(w*0.06, h*0.85, 70, 50);
+  g.beginPath(); g.moveTo(w*0.06, h*0.9); g.lineTo(w*0.06 + 70, h*0.9); g.stroke();
+  g.beginPath(); g.moveTo(w*0.06 + 35, h*0.85); g.lineTo(w*0.06 + 35, h*0.95); g.stroke();
+
+  // Bollard with rope
+  g.fillStyle = '#0a0706';
+  g.fillRect(w*0.88, h*0.82, 10, 16);
+  g.beginPath(); g.arc(w*0.88 + 5, h*0.82, 7, 0, Math.PI*2); g.fill();
+  // Rope to ship
+  g.strokeStyle = '#3a2a18';
+  g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(w*0.88 + 5, h*0.82); g.quadraticCurveTo(w*0.85, h*0.7, w*0.75, h*0.6);
+  g.stroke();
+}
+
+// Dispatcher -- route each city to its drawer
+const CITY_DRAWERS = {
+  london: drawLondon,
+  edinburgh: drawEdinburgh,
+  dublin: drawDublin,
+  liverpool: drawLiverpool,
+  manchester: drawManchester,
+  oxford: drawOxford,
+  cardiff: drawCardiff,
+  brighton: drawBrighton,
+  birmingham: drawBirmingham,
+  newcastle: drawNewcastle,
+  glasgow: drawGlasgow,
+  belfast: drawBelfast,
+};
+
+// ═══════════════ DRAW CITY ROOM ═══════════════
+function drawCity(){
+  const cw = canvas.clientWidth, ch = canvas.clientHeight;
+  const city = CITY_BY_ID[currentRoom];
+  const drawer = CITY_DRAWERS[currentRoom];
+  if(drawer){
+    drawer(ctx, cw, ch);
+  } else {
+    // Fallback (shouldn't happen)
+    ctx.fillStyle = '#0a0706';
+    ctx.fillRect(0, 0, cw, ch);
+  }
+
+  // Draw players in this room
+  const playersHere = [me, ...Object.values(others).filter(o => o.room === currentRoom)];
+  playersHere.sort((a,b) => a.cityY - b.cityY);
+  playersHere.forEach(p => {
+    drawPersonInCity(p);
+    // Name tag
+    ctx.save();
+    ctx.font = "bold 11px 'JetBrains Mono', monospace";
+    ctx.textAlign = 'center';
+    const tm = ctx.measureText(p.nick || '?');
+    const tw = tm.width;
+    ctx.fillStyle = 'rgba(10, 7, 6, 0.9)';
+    ctx.fillRect(p.cityX - tw/2 - 6, p.cityY - 30, tw + 12, 14);
+    ctx.strokeStyle = 'rgba(184, 137, 64, 0.6)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(p.cityX - tw/2 - 6, p.cityY - 30, tw + 12, 14);
+    ctx.fillStyle = '#b88940';
+    ctx.fillText(p.nick || '?', p.cityX, p.cityY - 20);
+    ctx.restore();
+    // Speech bubble
+    const m = messages[p.id];
+    if(m && Date.now() - m.t < 7000){
+      ctx.save();
+      ctx.font = "500 14px 'Playfair Display', serif";
+      const bubW = Math.min(260, ctx.measureText(m.text).width + 24);
+      const by = p.cityY - 58;
+      ctx.fillStyle = 'rgba(241, 234, 217, 0.96)';
+      ctx.strokeStyle = '#b88940';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      if(ctx.roundRect){
+        ctx.roundRect(p.cityX - bubW/2, by, bubW, 28, 4);
+      } else {
+        ctx.rect(p.cityX - bubW/2, by, bubW, 28);
+      }
+      ctx.fill(); ctx.stroke();
+      // Pick darker version of chat colour for readability on cream bubble
+      const chatCol = m.colour || p.chatColour || '#0a0706';
+      ctx.fillStyle = darkenForReadability(chatCol);
+      ctx.font = "700 14px 'Playfair Display', serif";
+      ctx.textAlign = 'center';
+      const txt = m.text.length > 32 ? m.text.substring(0, 30) + '…' : m.text;
+      ctx.fillText(txt, p.cityX, by + 18);
+      ctx.restore();
+    }
+  });
+
+  // Sparse grain on city scenes
+  ctx.fillStyle = 'rgba(255,255,255,0.02)';
+  for(let i=0; i<200; i++){
+    ctx.fillRect((i*47 + pulsePhase) % cw, (i*23 + pulsePhase*2) % ch, 1, 1);
+  }
+}
+
+// ═══════════════ MAIN RENDER LOOP ═══════════════
+function render(){
+  pulsePhase++;
+  if(currentRoom === 'map') drawMap();
+  else drawCity();
+}
+
+// ═══════════════ MOVEMENT / UPDATE ═══════════════
+const keys = {};
+let joy = {x:0, y:0, active:false};
+
+window.addEventListener('keydown', e => {
+  if(e.target.tagName === 'INPUT') {
+    if(e.key === 'Enter'){ sendChat(); document.getElementById('chat-input').blur(); }
+    return;
+  }
+  keys[e.key.toLowerCase()] = true;
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    document.getElementById('chat-input').focus();
+  }
+  if(e.key.toLowerCase() === 'e'){ tryEnterCity(); }
+  if(e.key.toLowerCase() === 'm' && currentRoom !== 'map'){ goToMap(); }
+});
+window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+// Joystick
+(function setupJoy(){
+  const j = document.getElementById('joy');
+  const stick = document.getElementById('joy-stick');
+  const touch = (ev) => {
+    ev.preventDefault();
+    const r = j.getBoundingClientRect();
+    const t = ev.touches ? ev.touches[0] : ev;
+    const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    let dx = t.clientX - cx, dy = t.clientY - cy;
+    const d = Math.hypot(dx, dy), max = 35;
+    if(d > max){ dx = dx/d*max; dy = dy/d*max; }
+    stick.style.left = (40 + dx) + 'px';
+    stick.style.top = (40 + dy) + 'px';
+    joy.x = dx/max; joy.y = dy/max;
+  };
+  j.addEventListener('touchstart', e => { joy.active = true; touch(e); });
+  j.addEventListener('touchmove', e => { if(joy.active) touch(e); });
+  j.addEventListener('touchend', () => {
+    joy.active = false; joy.x = 0; joy.y = 0;
+    stick.style.left = '40px'; stick.style.top = '40px';
+  });
+})();
+
+function update(){
+  let dx = 0, dy = 0;
+  if(keys['w']||keys['arrowup']) dy -= 1;
+  if(keys['s']||keys['arrowdown']) dy += 1;
+  if(keys['a']||keys['arrowleft']) dx -= 1;
+  if(keys['d']||keys['arrowright']) dx += 1;
+  dx += joy.x; dy += joy.y;
+
+  const mag = Math.hypot(dx, dy);
+  if(mag > 0.05){
+    dx = dx/mag; dy = dy/mag;
+  } else {
+    dx = 0; dy = 0;
+  }
+
+  if(currentRoom === 'map'){
+    const speed = 0.003;
+    if(dx || dy){
+      me.x = Math.max(0.02, Math.min(0.98, me.x + dx*speed));
+      me.y = Math.max(0.02, Math.min(0.98, me.y + dy*speed));
+    }
+    // Find nearest city
+    let best = null, bestD = 0.05;
+    CITIES.forEach(c => {
+      const d = Math.hypot(c.nx - me.x, c.ny - me.y);
+      if(d < bestD){ bestD = d; best = c; }
+    });
+    nearCity = best;
+    const prompt = document.getElementById('prompt');
+    if(best){
+      prompt.classList.add('show');
+      prompt.innerHTML = `<kbd>E</kbd>Enter ${best.name}`;
+    } else {
+      prompt.classList.remove('show');
+    }
+  } else {
+    const speed = 3.5;
+    const cw = canvas.clientWidth, ch = canvas.clientHeight;
+    if(dx || dy){
+      me.cityX = Math.max(40, Math.min(cw - 40, me.cityX + dx*speed));
+      me.cityY = Math.max(ch*0.55, Math.min(ch - 90, me.cityY + dy*speed));
+    }
+  }
+
+  syncPosition();
+}
+
+let lastSync = 0;
+function syncPosition(){
+  if(!fbOK || !myPlayerRef || !myId) return;
+  const now = Date.now();
+  if(now - lastSync < 80) return;
+  lastSync = now;
+  try {
+    fbSet(myPlayerRef, {
+      x: me.x, y: me.y,
+      cityX: me.cityX, cityY: me.cityY,
+      room: currentRoom,
+      nick: me.nick,
+      avatar: me.avatar,
+      photo: me.photo,
+      age: me.age,
+      sex: me.sex,
+      location: me.location,
+      chatColour: me.chatColour,
+      t: fbServerTimestamp()
+    });
+  } catch(e){ console.error('[Sync]', e); }
+}
+
+// ═══════════════ ROOM TRANSITIONS ═══════════════
+function tryEnterCity(){
+  if(currentRoom !== 'map' || !nearCity) return;
+  enterRoom(nearCity.id);
+}
+
+function enterRoom(rid){
+  currentRoom = rid;
+  me.room = rid;
+  const backBtn = document.getElementById('back-btn');
+  const title = document.getElementById('hud-title');
+  const prompt = document.getElementById('prompt');
+  if(rid === 'map'){
+    title.innerHTML = '◆ Explore the UK Chat Rooms on BritChat ◆';
+    backBtn.classList.remove('show');
+  } else {
+    const c = CITY_BY_ID[rid];
+    title.innerHTML = `◆ ${c.name} · ${c.sub} ◆`;
+    backBtn.classList.add('show');
+    // Hide the "Enter London" prompt — we're in a room now, don't need it
+    prompt.classList.remove('show');
+    nearCity = null;
+    // Spawn player in lower half of city scene
+    const cw = canvas.clientWidth, ch = canvas.clientHeight;
+    me.cityX = cw/2 + (Math.random()*100 - 50);
+    me.cityY = ch * 0.85;
+    showToast(`Welcome to ${c.name}`);
+  }
+  setupChatForRoom(rid);
+  syncPosition();
+}
+
+function goToMap(){ enterRoom('map'); }
+
+// Profile popover hover/tap detection
+function findPlayerAtPoint(cx, cy){
+  const candidates = [];
+  if(currentRoom === 'map'){
+    // Include self + others on map
+    const all = [me, ...Object.values(others).filter(o => o.room === 'map')];
+    all.forEach(p => {
+      const pos = mapCoord(p.x, p.y);
+      const r = 16; // hit radius
+      if(Math.hypot(pos.x - cx, pos.y - cy) < r) candidates.push({p, dist: Math.hypot(pos.x-cx,pos.y-cy)});
+    });
+  } else {
+    const all = [me, ...Object.values(others).filter(o => o.room === currentRoom)];
+    all.forEach(p => {
+      const r = 26;
+      if(Math.hypot(p.cityX - cx, p.cityY - cy) < r) candidates.push({p, dist: Math.hypot(p.cityX-cx,p.cityY-cy)});
+    });
+  }
+  candidates.sort((a,b) => a.dist - b.dist);
+  return candidates[0] ? candidates[0].p : null;
+}
+
+function showProfile(p, pointerX, pointerY){
+  if(!p) return;
+  const pop = document.getElementById('profile-pop');
+  // Avatar
+  const avBox = document.getElementById('pp-avatar');
+  if(p.photo){
+    avBox.innerHTML = `<img src="${p.photo}">`;
+  } else {
+    avBox.innerHTML = avatarSVG((p.avatar && p.avatar.bg) || '#7a1a2b', (p.avatar && p.avatar.fig) || 'dapper_man');
+  }
+  // Nick + meta
+  document.getElementById('pp-nick').textContent = p.nick || '?';
+  const metaBits = [];
+  if(p.age) metaBits.push(p.age);
+  if(p.sex) metaBits.push(p.sex);
+  document.getElementById('pp-meta').innerHTML = metaBits.length
+    ? metaBits.join('<span class="dot-sep">◆</span>')
+    : '<em style="opacity:.4;font-style:italic">◆ no bio ◆</em>';
+  const locEl = document.getElementById('pp-loc');
+  locEl.textContent = p.location || '';
+  // Position near pointer (keep within viewport)
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let px = pointerX + 18, py = pointerY - 20;
+  pop.style.left = '0px'; pop.style.top = '0px';
+  pop.classList.add('show');
+  // Measure and re-place
+  const pw = pop.offsetWidth, ph = pop.offsetHeight;
+  if(px + pw > vw - 10) px = pointerX - pw - 18;
+  if(py < 10) py = 10;
+  if(py + ph > vh - 10) py = vh - ph - 10;
+  pop.style.left = px + 'px';
+  pop.style.top = py + 'px';
+}
+function hideProfile(){
+  document.getElementById('profile-pop').classList.remove('show');
+}
+
+// Mouse hover (desktop) - show profile
+canvas.addEventListener('mousemove', (e) => {
+  const r = canvas.getBoundingClientRect();
+  const p = findPlayerAtPoint(e.clientX - r.left, e.clientY - r.top);
+  if(p){ showProfile(p, e.clientX, e.clientY); canvas.style.cursor = 'pointer'; }
+  else { hideProfile(); canvas.style.cursor = ''; }
+});
+canvas.addEventListener('mouseleave', hideProfile);
+
+// Touch/tap (mobile) - show profile for 3s
+let touchProfileTimer = null;
+canvas.addEventListener('touchstart', (e) => {
+  if(e.touches.length !== 1) return;
+  const r = canvas.getBoundingClientRect();
+  const t = e.touches[0];
+  const p = findPlayerAtPoint(t.clientX - r.left, t.clientY - r.top);
+  if(p){
+    showProfile(p, t.clientX, t.clientY);
+    clearTimeout(touchProfileTimer);
+    touchProfileTimer = setTimeout(hideProfile, 3000);
+  }
+}, {passive: true});
+
+// Click/tap to enter city (map) or view profile of tapped player
+canvas.addEventListener('click', e => {
+  const r = canvas.getBoundingClientRect();
+  const cx = e.clientX - r.left, cy = e.clientY - r.top;
+
+  // If clicking on another player, show profile
+  const clickedPlayer = findPlayerAtPoint(cx, cy);
+  if(clickedPlayer && clickedPlayer !== me){
+    showProfile(clickedPlayer, e.clientX, e.clientY);
+    clearTimeout(touchProfileTimer);
+    touchProfileTimer = setTimeout(hideProfile, 4000);
+    return;
+  }
+
+  // On map: click near a city to enter it
+  if(currentRoom === 'map'){
+    const inv = inverseMap(cx, cy);
+    let best = null, bestD = 0.07;
+    CITIES.forEach(c => {
+      const d = Math.hypot(c.nx - inv.nx, c.ny - inv.ny);
+      if(d < bestD){ bestD = d; best = c; }
+    });
+    if(best){ enterRoom(best.id); }
+  }
+});
+
+// Tap the prompt hint itself to enter the nearby city
+document.getElementById('prompt').addEventListener('click', tryEnterCity);
+
+// Back, travel, help, leave buttons
+document.getElementById('back-btn').addEventListener('click', goToMap);
+document.getElementById('leave-btn').addEventListener('click', () => {
+  if(confirm('Leave BritChat?')){
+    if(fbOK && myPlayerRef) try { fbRemove(myPlayerRef); } catch(e){}
+    location.reload();
+  }
+});
+document.getElementById('help-btn').addEventListener('click', () => {
+  alert('BritChat · BritWorld\n\n' +
+    '• WASD or joystick to walk\n' +
+    '• Walk near a city and press E (or click) to enter\n' +
+    '• Chat with everyone in the same city\n' +
+    '• Press M (or ← Back to Map) to return\n' +
+    '• Use Travel menu to jump to any city\n\n' +
+    'Be kind · 18+ · Have fun.');
+});
+
+// Travel menu
+(function buildTravelMenu(){
+  const panel = document.getElementById('travel-panel');
+  let html = '<div class="travel-title">◆ Quick Travel</div>';
+  html += `<div class="travel-item" data-r="map"><span class="marker">◈</span> Back to Map</div>`;
+  CITIES.forEach(c => {
+    html += `<div class="travel-item" data-r="${c.id}"><span class="marker">◆</span> ${c.name}</div>`;
+  });
+  panel.innerHTML = html;
+  panel.querySelectorAll('.travel-item').forEach(el => {
+    el.onclick = () => { enterRoom(el.dataset.r); panel.classList.remove('show'); };
+  });
+})();
+document.getElementById('travel-btn').addEventListener('click', () => {
+  document.getElementById('travel-panel').classList.toggle('show');
+});
+
+// Toast
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════ CHAT ═══════════════
+let chatUnsub = null;
+function setupChatForRoom(rid){
+  if(!fbOK || !db) return;
+  // Clear messages from previous room to prevent ghosts
+  for(const k in messages){ delete messages[k]; }
+  chatRef = fbRef(db, 'bw5_chat/' + rid);
+  const q = fbQuery(chatRef, fbLimitToLast(40));
+  fbOnValue(q, snap => {
+    const data = snap.val() || {};
+    for(const k in data){
+      const m = data[k];
+      if(m && m.from && m.text && m.t){
+        const existing = messages[m.from];
+        if(!existing || existing.t < m.t){
+          messages[m.from] = { text: m.text, t: m.t, colour: m.colour || '#f1ead9' };
+        }
+      }
+    }
+  });
+}
+
+function sendChat(){
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if(!text) return;
+  const msg = {
+    from: myId || 'local',
+    text: text.substring(0, 140),
+    t: Date.now(),
+    nick: me.nick,
+    colour: me.chatColour || '#f1ead9'
+  };
+  messages[msg.from] = { text: msg.text, t: msg.t, colour: msg.colour };
+  if(fbOK && db){
+    try {
+      const mRef = fbPush(fbRef(db, 'bw5_chat/' + currentRoom));
+      fbSet(mRef, msg);
+    } catch(e){ console.error('[Chat send]', e); }
+  }
+  input.value = '';
+}
+
+// Darken a hex colour for readable text on a cream bubble
+function darkenForReadability(hex){
+  if(!hex || typeof hex !== 'string') return '#0a0706';
+  const m = hex.match(/^#?([0-9a-f]{6})$/i);
+  if(!m) return '#0a0706';
+  let r = parseInt(m[1].substring(0,2), 16);
+  let g = parseInt(m[1].substring(2,4), 16);
+  let b = parseInt(m[1].substring(4,6), 16);
+  // If the colour is already dark, leave it (it'll read fine on cream)
+  const luma = (0.299*r + 0.587*g + 0.114*b);
+  if(luma < 120) return hex;
+  // Otherwise darken by scaling down
+  const scale = 0.45;
+  r = Math.round(r * scale); g = Math.round(g * scale); b = Math.round(b * scale);
+  return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
+}
+document.getElementById('send-btn').addEventListener('click', sendChat);
+
+// ═══════════════ PRESENCE ═══════════════
+function initPresence(){
+  myId = 'p_' + Math.random().toString(36).substring(2, 10);
+  me.id = myId;
+  if(!fbOK || !db){
+    document.getElementById('online-count').innerHTML = '<span class="dot"></span>OFFLINE';
+    return;
+  }
+  myPlayerRef = fbRef(db, 'bw5_players/' + myId);
+  try {
+    fbSet(myPlayerRef, {
+      x: me.x, y: me.y,
+      cityX: me.cityX, cityY: me.cityY,
+      room: currentRoom,
+      nick: me.nick,
+      avatar: me.avatar,
+      photo: me.photo,
+      age: me.age,
+      sex: me.sex,
+      location: me.location,
+      chatColour: me.chatColour,
+      t: fbServerTimestamp()
+    });
+    fbOnDisconnect(myPlayerRef).remove();
+
+    fbOnValue(fbRef(db, 'bw5_players'), snap => {
+      const data = snap.val() || {};
+      for(const id in others){ if(!data[id]) delete others[id]; }
+      let total = 0;
+      for(const id in data){
+        total++;
+        if(id === myId) continue;
+        if(!others[id]) others[id] = { id };
+        Object.assign(others[id], data[id], { id });
+      }
+      const inRoom = Object.values(data).filter(p => p.room === currentRoom).length;
+      document.getElementById('online-count').innerHTML =
+        `<span class="dot"></span>${inRoom} HERE · ${total} ONLINE`;
+    });
+  } catch(e){
+    console.error('[Presence init]', e);
+    document.getElementById('online-count').innerHTML = '<span class="dot"></span>OFFLINE';
+  }
+}
+
+// ═══════════════ START ═══════════════
+function startGame(){
+  initPresence();
+  enterRoom('map');
+  setTimeout(resizeCanvas, 100);
+  setTimeout(resizeCanvas, 500);
+  console.log('[BritChat] Started. Canvas:', canvas.clientWidth, 'x', canvas.clientHeight);
+  const loop = () => {
+    update();
+    render();
+    requestAnimationFrame(loop);
+  };
+  loop();
+}
+
+// Polyfill roundRect
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+    this.beginPath();
+    this.moveTo(x+r, y);
+    this.lineTo(x+w-r, y); this.quadraticCurveTo(x+w, y, x+w, y+r);
+    this.lineTo(x+w, y+h-r); this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    this.lineTo(x+r, y+h); this.quadraticCurveTo(x, y+h, x, y+h-r);
+    this.lineTo(x, y+r); this.quadraticCurveTo(x, y, x+r, y);
+    return this;
+  };
+}
+</script>
+</body>
+</html>
