@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>BritChat 🇬🇧 — Free UK Live Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+:root{
+  --bg:#050b07;--bg2:#091210;--surface:#0e1c10;--surface2:#152418;
+  --green:#1a8a1a;--green2:#22aa22;--accent:#3ddd5c;
+  --gold:#c8960e;--gold2:#edbc38;
+  --text:#d4edda;--text2:rgba(180,225,185,.55);--text3:rgba(180,225,185,.22);
+  --border:rgba(61,221,92,.09);--border2:rgba(61,221,92,.22);
+  --sans:'Outfit',sans-serif;--display:'Syne',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden}
+
+/* atmosphere */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 60% at 10% 5%,rgba(30,150,30,.14) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 70% at 92% 85%,rgba(200,150,14,.07) 0%,transparent 50%)}
+body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.025;
+  background-image:linear-gradient(var(--accent) 1px,transparent 1px),linear-gradient(90deg,var(--accent) 1px,transparent 1px);
+  background-size:44px 44px}
+
+/* ── HEADER ── */
+header{position:sticky;top:0;z-index:100;background:rgba(5,11,7,.93);
+  backdrop-filter:blur(20px);border-bottom:1px solid var(--border);
+  padding:0 18px;height:54px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--display);font-size:22px;font-weight:900;letter-spacing:-1px;
+  color:var(--gold2);display:flex;align-items:center;gap:7px;user-select:none}
+.logo em{color:var(--accent);font-style:normal}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+  color:var(--accent);padding:4px 11px;background:rgba(61,221,92,.07);
+  border:1px solid rgba(61,221,92,.2);border-radius:20px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 1.8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── MAIN PAGE ── */
+.page{position:relative;z-index:1;max-width:540px;margin:0 auto;padding:40px 20px 60px;text-align:center}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  color:var(--gold2);border:1px solid rgba(200,150,14,.3);
+  background:rgba(200,150,14,.06);padding:5px 14px;border-radius:20px;margin-bottom:20px}
+h1{font-family:var(--display);font-size:clamp(48px,12vw,80px);
+  font-weight:900;line-height:1;letter-spacing:-4px;margin-bottom:24px}
+h1 .g{color:var(--gold2)}
+h1 .a{color:var(--accent)}
+
+/* name entry card */
+.entry-card{background:var(--surface);border:1px solid var(--border2);
+  border-radius:20px;padding:28px 24px;margin-bottom:16px}
+.entry-label{font-size:11px;font-weight:800;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--text2);margin-bottom:10px;display:block}
+.name-row{display:flex;flex-direction:column;gap:10px}
+.name-input{width:100%;padding:14px 16px;background:var(--bg);
+  border:1px solid var(--border2);border-radius:12px;
+  color:var(--text);font-family:var(--sans);font-size:16px;font-weight:700;
+  outline:none;transition:border .2s}
+.name-input:focus{border-color:var(--accent)}
+.name-input::placeholder{color:var(--text3);font-weight:400}
+.join-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--green),var(--green2));
+  border:none;border-radius:12px;color:#fff;font-family:var(--display);
+  font-size:17px;font-weight:900;cursor:pointer;transition:all .2s;
+  box-shadow:0 6px 24px rgba(34,170,34,.35);letter-spacing:.3px}
+.join-btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(34,170,34,.5)}
+.join-btn:active{transform:translateY(0)}
+.quick-names{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.qname{padding:5px 13px;border-radius:20px;border:1px solid var(--border);
+  background:transparent;color:var(--text2);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;font-family:var(--sans)}
+.qname:hover{border-color:var(--accent);color:var(--accent)}
+
+.lounge-link{display:inline-flex;align-items:center;gap:7px;
+  padding:11px 22px;background:transparent;border:1px solid var(--border2);
+  border-radius:12px;color:var(--text2);font-family:var(--sans);
+  font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:10px}
+.lounge-link:hover{border-color:var(--gold2);color:var(--gold2)}
+
+/* ── CUSTOMISE SECTION ── */
+.cust-section{margin-top:32px;text-align:left}
+.sect-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sect-title{font-family:var(--display);font-size:14px;font-weight:900;color:var(--gold2)}
+.sect-line{flex:1;height:1px;background:rgba(200,150,14,.15)}
+.cust-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px}
+.cust-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.cf label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;
+  color:var(--text2);display:block;margin-bottom:5px}
+.color-row{display:flex;gap:8px;align-items:center}
+.swatch{width:36px;height:36px;border-radius:8px;border:2px solid var(--border2);
+  overflow:hidden;cursor:pointer;position:relative;flex-shrink:0}
+.swatch input{position:absolute;inset:-4px;width:calc(100%+8px);height:calc(100%+8px);cursor:pointer;border:none;padding:0}
+.cprev{flex:1;padding:8px;border-radius:7px;font-size:12px;font-weight:700;
+  text-align:center;transition:all .2s;border:1px solid var(--border)}
+.font-pills{display:flex;flex-wrap:wrap;gap:5px}
+.fpill{padding:5px 11px;border-radius:18px;border:1px solid var(--border);
+  background:var(--bg);color:var(--text2);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;font-family:var(--sans)}
+.fpill:hover{border-color:var(--border2);color:var(--text)}
+.fpill.on{border-color:var(--gold2);color:var(--gold2);background:rgba(200,150,14,.08)}
+
+/* ── GAMES ── */
+.games-section{margin-top:32px;text-align:left}
+.games-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gcard{background:linear-gradient(135deg,var(--surface),var(--bg2));
+  border:1px solid rgba(200,150,14,.15);border-radius:14px;
+  padding:16px 14px;cursor:pointer;transition:all .2s;text-align:center}
+.gcard:hover{transform:translateY(-2px);border-color:rgba(200,150,14,.4);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.gcard-icon{font-size:28px;margin-bottom:6px;display:block}
+.gcard-name{font-family:var(--display);font-size:13px;font-weight:800;color:var(--gold2);margin-bottom:2px}
+.gcard-desc{font-size:11px;color:var(--text2)}
+
+/* ── CHAT FULLSCREEN ── */
+/* When chat is open, the whole screen IS the chat */
+#chat-screen{
+  display:none;position:fixed;inset:0;z-index:500;
+  flex-direction:column;background:var(--bg2);
+}
+#chat-screen.open{display:flex}
+
+.chat-bar{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  background:rgba(5,11,7,.95);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.chat-bar-logo{font-family:var(--display);font-size:16px;font-weight:900;color:var(--gold2);flex-shrink:0}
+.chat-room-pills{display:flex;gap:6px;overflow-x:auto;flex:1;scrollbar-width:none}
+.chat-room-pills::-webkit-scrollbar{display:none}
+.rpill{padding:5px 12px;border-radius:20px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text2);font-size:11px;font-weight:700;
+  cursor:pointer;white-space:nowrap;font-family:var(--sans);transition:all .15s;flex-shrink:0}
+.rpill:hover,.rpill.active{border-color:var(--accent);color:var(--accent);background:rgba(61,221,92,.08)}
+.back-btn{padding:6px 12px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text2);font-size:12px;font-weight:700;
+  cursor:pointer;font-family:var(--sans);white-space:nowrap;flex-shrink:0;transition:all .15s}
+.back-btn:hover{color:var(--text);border-color:var(--border2)}
+
+#chat-frame{width:100%;flex:1;border:none;min-height:0;display:block}
+
+/* ── GAME OVERLAYS ── */
+.goverlay{display:none;position:fixed;inset:0;z-index:1100;
+  background:rgba(0,0,0,.96);backdrop-filter:blur(14px);
+  align-items:center;justify-content:center;padding:20px}
+.goverlay.open{display:flex}
+.gpanel{width:100%;max-width:460px;background:var(--bg2);
+  border:1px solid rgba(200,150,14,.3);border-radius:20px;padding:24px;
+  box-shadow:0 20px 80px rgba(0,0,0,.9)}
+.gphead{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.gptitle{font-family:var(--display);font-size:18px;font-weight:900;color:var(--gold2)}
+.gpclose{background:var(--surface);border:1px solid var(--border);color:var(--text2);
+  width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+.gpclose:hover{background:rgba(200,50,50,.2);color:#ff8888}
+#trivia-q{font-size:15px;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:16px;min-height:44px}
+.topts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.topt{padding:10px 11px;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;text-align:left}
+.topt:hover:not(:disabled){background:var(--surface2);color:var(--text)}
+.topt.correct{background:rgba(61,221,92,.12);border-color:var(--accent);color:var(--accent)}
+.topt.wrong{background:rgba(220,50,50,.12);border-color:#f44;color:#f88}
+.topt:disabled{cursor:default}
+.tfoot{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text2)}
+.tfoot .pts{font-family:var(--display);font-size:22px;color:var(--gold2);font-weight:900}
+.tnext{width:100%;padding:11px;background:linear-gradient(135deg,var(--green),var(--green2));
+  border:none;border-radius:10px;color:#fff;font-family:var(--display);
+  font-size:14px;font-weight:800;cursor:pointer;display:none;margin-top:10px}
+.gword{font-family:var(--display);font-size:32px;font-weight:900;color:var(--accent);
+  text-align:center;letter-spacing:7px;margin-bottom:10px}
+.ghint{font-size:12px;color:var(--text2);text-align:center;margin-bottom:14px}
+.ginput{width:100%;padding:11px 14px;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);font-family:var(--display);font-size:17px;
+  font-weight:700;letter-spacing:4px;text-align:center;outline:none;text-transform:uppercase}
+.ginput:focus{border-color:var(--accent)}
+.gbtn{width:100%;padding:11px;margin-top:10px;background:linear-gradient(135deg,var(--green),var(--green2));
+  border:none;border-radius:10px;color:#fff;font-family:var(--display);font-size:14px;font-weight:800;cursor:pointer}
+.gbtn.pur{background:linear-gradient(135deg,#6633bb,#9955ee)}
+.gbtn.grey{background:linear-gradient(135deg,#334,#446);margin-top:8px}
+.gresult{text-align:center;font-size:14px;font-weight:700;margin-top:10px;min-height:20px}
+#memdisplay{font-family:var(--display);font-size:44px;font-weight:900;color:var(--gold2);
+  text-align:center;letter-spacing:6px;min-height:56px;margin-bottom:16px}
+#memstatus{text-align:center;font-size:13px;color:var(--text2);margin-top:6px;min-height:18px}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--surface2);border:1px solid var(--border2);color:var(--text);
+  padding:10px 22px;border-radius:30px;font-size:13px;font-weight:700;
+  z-index:9999;display:none;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+
+footer{position:relative;z-index:1;text-align:center;padding:20px;
+  font-size:11px;color:var(--text3);border-top:1px solid var(--border)}
+footer a{color:var(--text2);text-decoration:none}
+
+/* ── LOUNGE CHAT ── */
+#lounge-screen{display:none;position:fixed;inset:0;z-index:500;flex-direction:column;background:var(--bg2)}
+#lounge-screen.open{display:flex}
+.lounge-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(5,11,7,.95);border-bottom:1px solid var(--border);flex-shrink:0}
+.lounge-title{font-family:var(--display);font-size:16px;font-weight:900;color:var(--gold2);flex:1}
+.lounge-online{font-size:11px;color:var(--accent);font-weight:700}
+#lounge-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:2px;scroll-behavior:smooth}
+.lmsg{display:flex;gap:8px;padding:3px 0;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.lmsg-av{width:28px;height:28px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px}
+.lmsg-body{flex:1;min-width:0}
+.lmsg-meta{display:flex;align-items:baseline;gap:6px;margin-bottom:1px}
+.lmsg-name{font-size:12px;font-weight:800;color:var(--accent)}
+.lmsg-name.bot{color:#aa88ff}
+.lmsg-time{font-size:10px;color:var(--text3)}
+.lmsg-text{font-size:13px;color:var(--text);line-height:1.45;word-break:break-word}
+.lmsg-system{font-size:11px;color:var(--text3);font-style:italic;padding:4px 0;text-align:center}
+.lounge-input-bar{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg2)}
+#lounge-input{flex:1;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:border .2s}
+#lounge-input:focus{border-color:var(--accent)}
+#lounge-input::placeholder{color:var(--text3)}
+.lounge-send{padding:10px 18px;background:linear-gradient(135deg,var(--green),var(--green2));border:none;border-radius:10px;color:#fff;font-family:var(--display);font-size:14px;font-weight:900;cursor:pointer}
+.typing-bar{height:18px;font-size:11px;color:var(--text3);padding:0 12px;flex-shrink:0;font-style:italic}
+
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo">🇬🇧 Brit<em>Chat</em></div>
+  <div class="live-pill"><div class="live-dot"></div>Live</div>
+</header>
+
+<!-- ══ MAIN PAGE ══ -->
+<div class="page">
+  <div class="eyebrow">🌍 Free UK & World Wide Chat</div>
+  <h1><span class="g">Brit</span><span class="a">Chat</span></h1>
+
+  <!-- NAME ENTRY -->
+  <div class="entry-card">
+    <span class="entry-label">Pick a nickname and jump straight in</span>
+    <div class="name-row">
+      <input class="name-input" id="nick-input" type="text" placeholder="Your nickname…"
+        maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="off"
+        onkeydown="if(event.key==='Enter')joinChat(0)">
+      <button class="join-btn" onclick="joinChat(0)">💬 Join Chat</button>
+    </div>
+    <div class="quick-names">
+      <span style="font-size:11px;color:var(--text3);align-self:center">Quick pick:</span>
+      <button class="qname" onclick="setNick('LondonLad')">LondonLad</button>
+      <button class="qname" onclick="setNick('NorthernSoul')">NorthernSoul</button>
+      <button class="qname" onclick="setNick('BritChatter')">BritChatter</button>
+      <button class="qname" onclick="setNick('GuestUK')">GuestUK</button>
+    </div>
+  </div>
+
+  <button class="lounge-link" onclick="openLounge()">🛋️ BritChat Lounge</button>
+
+  <!-- CUSTOMISE -->
+  <div class="cust-section">
+    <div class="sect-head">
+      <div class="sect-title">🎨 Personalise</div>
+      <div class="sect-line"></div>
+    </div>
+    <div class="cust-card">
+      <div class="cust-row">
+        <div class="cf">
+          <label>Background</label>
+          <div class="color-row">
+            <div class="swatch"><input type="color" id="cust-bg" value="#060d08" oninput="updatePreview()"></div>
+            <div class="swatch"><input type="color" id="cust-fg" value="#44ee66" oninput="updatePreview()"></div>
+            <div class="cprev" id="cprev">Preview text</div>
+          </div>
+        </div>
+        <div class="cf">
+          <label>Font</label>
+          <div class="font-pills">
+            <div class="fpill on" onclick="selFont('Arial',this)">Arial</div>
+            <div class="fpill" onclick="selFont('Georgia',this)">Georgia</div>
+            <div class="fpill" onclick="selFont('Verdana',this)">Verdana</div>
+            <div class="fpill" onclick="selFont('Courier New',this)">Courier</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAMES -->
+  <div class="games-section">
+    <div class="sect-head">
+      <div class="sect-title">🎮 Games</div>
+      <div class="sect-line"></div>
+    </div>
+    <div class="games-grid">
+      <div class="gcard" onclick="openGame('trivia')"><span class="gcard-icon">🧠</span><div class="gcard-name">Trivia Quiz</div><div class="gcard-desc">Beat your score</div></div>
+      <div class="gcard" onclick="openGame('scramble')"><span class="gcard-icon">🔤</span><div class="gcard-name">Word Scramble</div><div class="gcard-desc">Unscramble it</div></div>
+      <div class="gcard" onclick="openGame('memory')"><span class="gcard-icon">🔢</span><div class="gcard-name">Number Memory</div><div class="gcard-desc">Level up</div></div>
+      <div class="gcard" onclick="openGame('riddle')"><span class="gcard-icon">🕵️</span><div class="gcard-name">Daily Riddle</div><div class="gcard-desc">Can you crack it?</div></div>
+    </div>
+  </div>
+</div>
+
+<footer>BritChat 🇬🇧 · Powered by <a href="https://htmlchat.org" target="_blank">HTMLChat</a></footer>
+
+
+<!-- ══ LOUNGE SCREEN (Firebase-powered) ══ -->
+<div id="lounge-screen">
+  <div class="lounge-bar">
+    <div class="lounge-title">🛋️ BritChat Lounge</div>
+    <div class="lounge-online" id="lounge-count">0 online</div>
+    <button class="back-btn" onclick="leaveLounge()">← Back</button>
+  </div>
+  <div id="lounge-msgs"></div>
+  <div class="typing-bar" id="lounge-typing"></div>
+  <div class="lounge-input-bar">
+    <input id="lounge-input" placeholder="Message the Lounge…" maxlength="500"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendLoungeMsg()}"
+      oninput="loungeTyping()">
+    <button class="lounge-send" onclick="sendLoungeMsg()">Send</button>
+  </div>
+</div>
+
+<!-- ══ CHAT SCREEN (fullscreen when open) ══ -->
+<div id="chat-screen">
+  <div class="chat-bar">
+    <div class="chat-bar-logo">🇬🇧 BC</div>
+    <div class="chat-room-pills">
+      <button class="rpill active" id="pill-0" onclick="switchRoom(0)">🇬🇧 Main Chat</button>
+      <button class="rpill" id="pill-1" onclick="switchRoom(1)">🛋️ Lounge</button>
+    </div>
+    <button class="back-btn" onclick="leaveChat()">← Back</button>
+  </div>
+  <div id="chat-hint" style="display:none;padding:8px 12px;background:rgba(200,150,14,.12);border-bottom:1px solid rgba(200,150,14,.3);font-size:11px;color:var(--gold2);text-align:center;flex-shrink:0">
+    💡 If you're not in the lounge yet, type <code style="background:rgba(0,0,0,.3);padding:1px 6px;border-radius:4px;color:var(--accent);font-weight:700">room=lounge</code> in the chat
+  </div>
+  <iframe id="chat-frame" src="" allow="camera;microphone" style="width:100%;flex:1;border:none;min-height:0;display:block;background:#111"></iframe>
+</div>
+
+<!-- ══ GAME OVERLAYS ══ -->
+<div class="goverlay" id="go-trivia">
+  <div class="gpanel">
+    <div class="gphead"><div class="gptitle">🧠 Trivia</div><button class="gpclose" onclick="closeGame('trivia')">✕</button></div>
+    <div id="trivia-q">Loading…</div>
+    <div class="topts" id="topts"></div>
+    <div class="tfoot"><span>Score: <span class="pts" id="tscore">0</span></span><span id="tqnum">Q 1/10</span></div>
+    <button class="tnext" id="tnext" onclick="triviaNext()">Next →</button>
+  </div>
+</div>
+<div class="goverlay" id="go-scramble">
+  <div class="gpanel">
+    <div class="gphead"><div class="gptitle">🔤 Word Scramble</div><button class="gpclose" onclick="closeGame('scramble')">✕</button></div>
+    <div class="gword" id="sword"></div>
+    <div class="ghint" id="shint"></div>
+    <input class="ginput" id="sinput" type="text" placeholder="TYPE ANSWER" maxlength="20" onkeydown="if(event.key==='Enter')checkScramble()">
+    <button class="gbtn" onclick="checkScramble()">Check</button>
+    <div class="gresult" id="sresult"></div>
+    <button class="gbtn grey" onclick="newScramble()">New Word</button>
+  </div>
+</div>
+<div class="goverlay" id="go-memory">
+  <div class="gpanel">
+    <div class="gphead"><div class="gptitle">🔢 Number Memory</div><button class="gpclose" onclick="closeGame('memory')">✕</button></div>
+    <div id="memdisplay">—</div>
+    <input class="ginput" id="meminput" type="number" placeholder="Type what you saw" style="display:none">
+    <div id="memstatus">Press Start!</div>
+    <button class="gbtn pur" id="membtn" onclick="memoryAction()">Start</button>
+  </div>
+</div>
+<div class="goverlay" id="go-riddle">
+  <div class="gpanel">
+    <div class="gphead"><div class="gptitle">🕵️ Daily Riddle</div><button class="gpclose" onclick="closeGame('riddle')">✕</button></div>
+    <div id="riddleq" style="font-size:15px;font-weight:600;color:var(--text);line-height:1.6;margin-bottom:16px"></div>
+    <input class="ginput" id="riddleinput" type="text" placeholder="Your answer…" onkeydown="if(event.key==='Enter')checkRiddle()">
+    <button class="gbtn" onclick="checkRiddle()">Submit</button>
+    <div class="gresult" id="riddleresult"></div>
+    <button class="gbtn grey" id="riddlehint" onclick="showRiddleHint()">Show Hint</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ═══════════════════════════════
+   BRITCHAT JS
+═══════════════════════════════ */
+
+const ROOMS = [
+  { channel:'main',                       label:'Main Chat' },
+  { channel:'lounge',                     label:'BritChat Lounge' },
+];
+
+let chatPrefs = JSON.parse(localStorage.getItem('bc_chat_prefs')||'{}');
+chatPrefs.bgcolor = chatPrefs.bgcolor||'#060d08';
+chatPrefs.fgcolor = chatPrefs.fgcolor||'#44ee66';
+chatPrefs.font    = chatPrefs.font||'Arial';
+chatPrefs.nick    = chatPrefs.nick||'';
+
+function savePrefs(){ localStorage.setItem('bc_chat_prefs',JSON.stringify(chatPrefs)); }
+
+// Restore saved nick
+if(chatPrefs.nick) document.getElementById('nick-input').value = chatPrefs.nick;
+// Restore colour pickers
+document.getElementById('cust-bg').value = chatPrefs.bgcolor;
+document.getElementById('cust-fg').value = chatPrefs.fgcolor;
+// Restore font pill
+document.querySelectorAll('.fpill').forEach(el=>{
+  el.classList.toggle('on', el.textContent.trim()===(chatPrefs.font||'Arial'));
+});
+updatePreview();
+
+function updatePreview(){
+  const bg=document.getElementById('cust-bg').value;
+  const fg=document.getElementById('cust-fg').value;
+  const p=document.getElementById('cprev');
+  p.style.background=bg; p.style.color=fg; p.style.borderColor=fg+'33';
+  chatPrefs.bgcolor=bg; chatPrefs.fgcolor=fg;
+}
+
+function selFont(f,el){
+  document.querySelectorAll('.fpill').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on'); chatPrefs.font=f;
+}
+
+function setNick(n){
+  document.getElementById('nick-input').value=n;
+  document.getElementById('nick-input').focus();
+}
+
+function buildURL(roomName){
+  // HTMLChat: ?name= sets USERNAME (not room)
+  // Rooms must be switched AFTER load by typing "room=XXX" in chat
+  // We pass the target room as a hash so we can post-process
+  const nick = getNick();
+  const bg = chatPrefs.bgcolor.replace('#','');
+  const fg = chatPrefs.fgcolor.replace('#','');
+  const cb = Date.now();
+  let url = `https://chat.htmlchat.org/?name=${encodeURIComponent(nick)}`;
+  url += `&bgcolor=${bg}&fgcolor=${fg}`;
+  url += `&cb=${cb}`;
+  // Store target room for later (can't send commands to iframe cross-origin)
+  url += `#room=${encodeURIComponent(roomName)}`;
+  return url;
+}
+
+function loadRoom(idx) {
+  const room = ROOMS[idx];
+  const url = buildURL(room.channel);
+  // Destroy old iframe and create fresh one - forces new HTMLChat session
+  const old = document.getElementById('chat-frame');
+  const parent = old.parentNode;
+  old.remove();
+  const frame = document.createElement('iframe');
+  frame.id = 'chat-frame';
+  frame.allow = 'camera;microphone';
+  frame.style.cssText = 'width:100%;flex:1;border:none;min-height:0;display:block;background:#111';
+  parent.appendChild(frame);
+
+  // After load, try to auto-switch room by injecting "room=XXX" into the chat input
+  frame.addEventListener('load', () => {
+    if (idx === 0) return; // main room - no switching needed
+    // Wait for HTMLChat's JS to initialise
+    setTimeout(() => autoSwitchRoom(frame, room.channel), 2500);
+    // Also retry a few times in case first try missed the input
+    setTimeout(() => autoSwitchRoom(frame, room.channel), 5000);
+    setTimeout(() => autoSwitchRoom(frame, room.channel), 8000);
+  });
+
+  setTimeout(() => { frame.src = url; }, 50);
+}
+
+function autoSwitchRoom(frame, roomName) {
+  try {
+    const doc = frame.contentDocument || frame.contentWindow?.document;
+    if (!doc) { throw new Error('iframe locked'); }
+    // Find chat input — HTMLChat uses a text input for messages
+    const inputs = doc.querySelectorAll('input[type="text"], textarea');
+    let chatInput = null;
+    for (const inp of inputs) {
+      const ph = (inp.placeholder || '').toLowerCase();
+      if (ph.includes('chat') || ph.includes('message') || ph.includes('type')) {
+        chatInput = inp; break;
+      }
+    }
+    if (!chatInput && inputs.length > 0) {
+      // Fallback: pick the biggest text input
+      chatInput = Array.from(inputs).sort((a,b) => b.offsetWidth - a.offsetWidth)[0];
+    }
+    if (!chatInput) throw new Error('no input found');
+
+    // Set value and dispatch events to trigger HTMLChat's handlers
+    chatInput.focus();
+    chatInput.value = 'room=' + roomName;
+    chatInput.dispatchEvent(new Event('input', {bubbles:true}));
+    chatInput.dispatchEvent(new Event('change', {bubbles:true}));
+    // Press Enter
+    ['keydown','keypress','keyup'].forEach(type => {
+      chatInput.dispatchEvent(new KeyboardEvent(type, {
+        key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true
+      }));
+    });
+    // Also try submitting the form if there is one
+    if (chatInput.form) { try { chatInput.form.requestSubmit?.(); } catch(e){} }
+    console.log('[BritChat] auto-switched to room:', roomName);
+  } catch (e) {
+    // Cross-origin iframe blocked us — show the fallback hint
+    console.log('[BritChat] auto-switch blocked, showing hint:', e.message);
+    const hint = document.getElementById('chat-hint');
+    if (hint) hint.style.display = 'block';
+  }
+}
+
+function getNick(){
+  const input = document.getElementById('nick-input').value.trim();
+  if(input) return input;
+  if(chatPrefs.nick) return chatPrefs.nick;
+  const g = 'Guest' + Math.floor(Math.random()*9999);
+  chatPrefs.nick = g;
+  return g;
+}
+
+let currentRoom = 0;
+
+function joinChat(idx) {
+  const nick = getNick();
+  chatPrefs.nick = nick;
+  document.getElementById('nick-input').value = nick;
+  savePrefs();
+  currentRoom = idx;
+  document.querySelectorAll('.rpill').forEach((p,i) => p.classList.toggle('active', i===idx));
+  // Hide hint — shows only if auto-switch fails
+  const hint = document.getElementById('chat-hint');
+  if (hint) hint.style.display = 'none';
+  document.getElementById('chat-screen').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  loadRoom(idx);
+}
+
+function switchRoom(idx) {
+  if(idx === currentRoom) return;
+  currentRoom = idx;
+  document.querySelectorAll('.rpill').forEach((p,i) => p.classList.toggle('active', i===idx));
+  // Hide hint — it'll only show if auto-switch fails
+  const hint = document.getElementById('chat-hint');
+  if (hint) hint.style.display = 'none';
+  loadRoom(idx);
+}
+
+function leaveChat() {
+  document.getElementById('chat-screen').classList.remove('open');
+  const frame = document.getElementById('chat-frame');
+  if(frame) frame.src = 'about:blank';
+  document.body.style.overflow = '';
+}
+
+/* ═══════════════════════════════
+   GAMES
+═══════════════════════════════ */
+const TRIVIA=[
+  {q:"Capital of France?",opts:["London","Berlin","Paris","Madrid"],a:2},
+  {q:"How many sides on a hexagon?",opts:["5","6","7","8"],a:1},
+  {q:"Year WW2 ended?",opts:["1943","1944","1945","1946"],a:2},
+  {q:"The Red Planet?",opts:["Venus","Mars","Jupiter","Saturn"],a:1},
+  {q:"Chemical symbol for gold?",opts:["Go","Gd","Au","Ag"],a:2},
+  {q:"Who wrote Romeo and Juliet?",opts:["Dickens","Shakespeare","Austen","Twain"],a:1},
+  {q:"Largest ocean on Earth?",opts:["Atlantic","Indian","Arctic","Pacific"],a:3},
+  {q:"Bones in the adult human body?",opts:["196","206","216","226"],a:1},
+  {q:"Language spoken in Brazil?",opts:["Spanish","French","Portuguese","Italian"],a:2},
+  {q:"Players in a football team?",opts:["9","10","11","12"],a:2},
+  {q:"Fastest land animal?",opts:["Lion","Cheetah","Greyhound","Horse"],a:1},
+  {q:"Year the Titanic sank?",opts:["1910","1911","1912","1913"],a:2},
+  {q:"What is H2O?",opts:["Hydrogen","Oxygen","Water","Salt"],a:2},
+  {q:"How many strings on a guitar?",opts:["4","5","6","7"],a:2},
+  {q:"Highest mountain on Earth?",opts:["K2","Kilimanjaro","Everest","Mont Blanc"],a:2},
+];
+const WORDS=[
+  {word:"BUTTERFLY",hint:"A flying insect"},{word:"ELEPHANT",hint:"Largest land animal"},
+  {word:"KEYBOARD",hint:"You type on this"},{word:"CHOCOLATE",hint:"Sweet treat"},
+  {word:"UMBRELLA",hint:"Keeps off the rain"},{word:"FOOTBALL",hint:"England's favourite sport"},
+  {word:"DECEMBER",hint:"Last month of the year"},{word:"DINOSAUR",hint:"Extinct reptile"},
+  {word:"KNOWLEDGE",hint:"What you gain from learning"},{word:"BRILLIANT",hint:"Very clever or shiny"},
+  {word:"FANTASTIC",hint:"Wonderfully good"},{word:"ADVENTURE",hint:"Exciting journey"},
+  {word:"LIGHTNING",hint:"Flash in a storm"},{word:"STRAWBERRY",hint:"Red summer fruit"},
+];
+const RIDDLES=[
+  {q:"I speak without a mouth and hear without ears. I have no body but come alive with wind. What am I?",a:"echo",hint:"Sound bouncing back"},
+  {q:"The more you take, the more you leave behind. What am I?",a:"footsteps",hint:"What your feet make"},
+  {q:"I have cities but no houses, mountains but no trees, water but no fish. What am I?",a:"map",hint:"Navigation tool"},
+  {q:"What has hands but cannot clap?",a:"clock",hint:"Tells the time"},
+  {q:"The more you have of me, the less you see. What am I?",a:"darkness",hint:"Absence of light"},
+  {q:"What gets wetter as it dries?",a:"towel",hint:"Used after a bath"},
+  {q:"I am always in front of you but cannot be seen. What am I?",a:"future",hint:"What comes next"},
+];
+
+let tIdx=0,tScore=0,tQ=[];
+let curWord=null,curRiddle=null;
+let memLevel=3,memNum='',memPhase='idle';
+let toastTimer;
+
+function openGame(g){
+  document.getElementById('go-'+g).classList.add('open');
+  if(g==='trivia')initTrivia();
+  if(g==='scramble')newScramble();
+  if(g==='memory')resetMemory();
+  if(g==='riddle')newRiddle();
+}
+function closeGame(g){document.getElementById('go-'+g).classList.remove('open');}
+
+function initTrivia(){tIdx=0;tScore=0;tQ=[...TRIVIA].sort(()=>Math.random()-.5).slice(0,10);showTrivia();}
+function showTrivia(){
+  if(tIdx>=tQ.length){document.getElementById('trivia-q').textContent='🎉 Done! Score: '+tScore+'/10';
+    document.getElementById('topts').innerHTML='';document.getElementById('tnext').style.display='none';return;}
+  const q=tQ[tIdx];
+  document.getElementById('trivia-q').textContent=q.q;
+  document.getElementById('tqnum').textContent='Q '+(tIdx+1)+'/10';
+  document.getElementById('tscore').textContent=tScore;
+  document.getElementById('tnext').style.display='none';
+  document.getElementById('topts').innerHTML=q.opts.map((o,i)=>`<button class="topt" onclick="answerTrivia(${i})">${o}</button>`).join('');
+}
+function answerTrivia(i){
+  const q=tQ[tIdx];
+  document.querySelectorAll('.topt').forEach(o=>o.disabled=true);
+  document.querySelectorAll('.topt')[q.a].classList.add('correct');
+  if(i===q.a){tScore++;document.getElementById('tscore').textContent=tScore;toast('✅ Correct!');}
+  else{document.querySelectorAll('.topt')[i].classList.add('wrong');toast('❌ Wrong — '+q.opts[q.a]);}
+  document.getElementById('tnext').style.display='block';
+}
+function triviaNext(){tIdx++;showTrivia();}
+
+function newScramble(){
+  curWord=WORDS[Math.floor(Math.random()*WORDS.length)];
+  document.getElementById('sword').textContent=curWord.word.split('').sort(()=>Math.random()-.5).join('');
+  document.getElementById('shint').textContent='💡 '+curWord.hint;
+  document.getElementById('sinput').value='';
+  document.getElementById('sresult').textContent='';
+}
+function checkScramble(){
+  const ans=document.getElementById('sinput').value.trim().toUpperCase();
+  const res=document.getElementById('sresult');
+  if(!ans)return;
+  if(ans===curWord.word){res.textContent='🎉 Correct!';res.style.color='var(--accent)';toast('🎉 Well done!');}
+  else{res.textContent='❌ Was: '+curWord.word;res.style.color='#f88';}
+}
+
+function resetMemory(){memLevel=3;memPhase='idle';
+  document.getElementById('memdisplay').textContent='—';
+  document.getElementById('meminput').style.display='none';
+  document.getElementById('memstatus').textContent='Level '+memLevel+' — press Start!';
+  document.getElementById('membtn').textContent='Start';}
+function memoryAction(){
+  if(memPhase==='idle'||memPhase==='result'){
+    memNum=Array.from({length:memLevel},()=>Math.floor(Math.random()*10)).join('');
+    memPhase='show';document.getElementById('memdisplay').textContent=memNum;
+    document.getElementById('meminput').style.display='none';
+    document.getElementById('memstatus').textContent='Memorise this!';
+    document.getElementById('membtn').textContent="Got it!";
+  }else if(memPhase==='show'){
+    memPhase='enter';document.getElementById('memdisplay').textContent='?'.repeat(memLevel);
+    document.getElementById('meminput').style.display='block';
+    document.getElementById('meminput').value='';
+    document.getElementById('meminput').focus();
+    document.getElementById('memstatus').textContent='Type what you saw:';
+    document.getElementById('membtn').textContent='Check';
+  }else if(memPhase==='enter'){
+    const ans=document.getElementById('meminput').value.trim();
+    if(ans===memNum){memLevel++;document.getElementById('memstatus').textContent='🎉 Correct! Level '+memLevel+' next!';
+      toast('🎉 Level up!');memPhase='result';document.getElementById('membtn').textContent='Next Level →';}
+    else{document.getElementById('memstatus').textContent='❌ It was: '+memNum;
+      toast('❌ Game over at level '+memLevel);memPhase='result';
+      document.getElementById('membtn').textContent='Try Again';memLevel=3;}
+  }
+}
+
+function newRiddle(){
+  const d=new Date();curRiddle=RIDDLES[(d.getDate()+d.getMonth())%RIDDLES.length];
+  document.getElementById('riddleq').textContent=curRiddle.q;
+  document.getElementById('riddleinput').value='';
+  document.getElementById('riddleresult').textContent='';
+  document.getElementById('riddlehint').style.display='block';
+}
+function checkRiddle(){
+  const ans=document.getElementById('riddleinput').value.trim().toLowerCase();
+  const res=document.getElementById('riddleresult');
+  if(!ans)return;
+  if(ans.includes(curRiddle.a)){res.textContent='🎉 Correct!';res.style.color='var(--accent)';toast('🎉 Brilliant!');}
+  else{res.textContent='❌ Try again!';res.style.color='#f88';}
+}
+function showRiddleHint(){toast('💡 Hint: '+curRiddle.hint,4000);document.getElementById('riddlehint').style.display='none';}
+
+function toast(msg,dur=2500){
+  const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.display='none',dur);
+}
+
+/* ═══════════════════════════════
+   FIREBASE LOUNGE
+═══════════════════════════════ */
+const FB_CFG = {
+  databaseURL: 'https://britchat-6faa5-default-rtdb.firebaseio.com'
+};
+let fbApp, fbDb, loungeOpen = false, loungeTypingTimer;
+let loungeNick = '', loungeColor = '#3ddd5c';
+
+function initFirebase() {
+  if (fbApp) return;
+  try {
+    fbApp = firebase.initializeApp(FB_CFG, 'lounge');
+    fbDb  = firebase.database(fbApp);
+  } catch(e) { console.error('Firebase init:', e); }
+}
+
+function openLounge() {
+  initFirebase();
+  loungeNick  = getNick();
+  loungeColor = chatPrefs.fgcolor || '#3ddd5c';
+  loungeOpen  = true;
+  document.getElementById('lounge-screen').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Announce join
+  fbDb.ref('bc_online/' + loungeNick).set({ name: loungeNick, room: 'lounge', ts: Date.now() });
+  fbDb.ref('bc_online/' + loungeNick).onDisconnect().remove();
+  // Listen to messages
+  listenLoungeMessages();
+  listenLoungePresence();
+  listenLoungeTyping();
+  // Enable Britty bot
+  enableBritty();
+  setTimeout(() => document.getElementById('lounge-input').focus(), 300);
+}
+
+function leaveLounge() {
+  loungeOpen = false;
+  document.getElementById('lounge-screen').classList.remove('open');
+  document.body.style.overflow = '';
+  if (fbDb) {
+    fbDb.ref('bc_online/' + loungeNick).remove();
+    fbDb.ref('bc_typing/lounge/' + loungeNick).remove();
+  }
+  // Detach listeners
+  if (fbDb) {
+    fbDb.ref('bc_msgs/lounge').off();
+    fbDb.ref('bc_online').off();
+    fbDb.ref('bc_typing/lounge').off();
+  }
+  document.getElementById('lounge-msgs').innerHTML = '';
+}
+
+let lastLoungeTs = 0;
+function listenLoungeMessages() {
+  // Load last 50 messages, then listen for new ones
+  fbDb.ref('bc_msgs/lounge').orderByKey().limitToLast(50).on('value', snap => {
+    const data = snap.val();
+    if (!data) return;
+    const msgs = Object.values(data).sort((a,b) => a.ts - b.ts);
+    const area = document.getElementById('lounge-msgs');
+    area.innerHTML = '';
+    msgs.forEach(m => renderLoungeMsg(m, false));
+    area.scrollTop = area.scrollHeight;
+    if (msgs.length) lastLoungeTs = msgs[msgs.length-1].ts;
+  });
+}
+
+function renderLoungeMsg(msg, scroll=true) {
+  const area = document.getElementById('lounge-msgs');
+  if (!area) return;
+  if (msg.system) {
+    const el = document.createElement('div');
+    el.className = 'lmsg-system';
+    el.textContent = msg.text;
+    area.appendChild(el);
+  } else {
+    const isBot = msg.username === 'brittybot';
+    const av = msg.avatar || (isBot ? '🤖' : '😊');
+    const col = msg.color || (isBot ? '#aa88ff' : '#3ddd5c');
+    const time = new Date(msg.ts).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+    const el = document.createElement('div');
+    el.className = 'lmsg';
+    el.innerHTML = `
+      <div class="lmsg-av">${av}</div>
+      <div class="lmsg-body">
+        <div class="lmsg-meta">
+          <span class="lmsg-name${isBot?' bot':''}" style="color:${col}">${msg.name||msg.username}</span>
+          <span class="lmsg-time">${time}</span>
+        </div>
+        <div class="lmsg-text">${escHtml(msg.text)}</div>
+      </div>`;
+    area.appendChild(el);
+  }
+  if (scroll) area.scrollTop = area.scrollHeight;
+}
+
+function escHtml(t) {
+  return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function sendLoungeMsg() {
+  const inp = document.getElementById('lounge-input');
+  const text = inp.value.trim();
+  if (!text || !fbDb) return;
+  inp.value = '';
+  clearTimeout(loungeTypingTimer);
+  fbDb.ref('bc_typing/lounge/' + loungeNick).remove();
+  const msg = {
+    username: loungeNick,
+    name:     loungeNick,
+    text,
+    ts:       Date.now(),
+    color:    loungeColor,
+    avatar:   chatPrefs.avatar || '😊'
+  };
+  fbDb.ref('bc_msgs/lounge').push(msg);
+}
+
+function listenLoungePresence() {
+  fbDb.ref('bc_online').on('value', snap => {
+    const data = snap.val() || {};
+    const loungeUsers = Object.values(data).filter(u => u.room === 'lounge');
+    document.getElementById('lounge-count').textContent = loungeUsers.length + ' online';
+  });
+}
+
+function loungeTyping() {
+  if (!fbDb) return;
+  fbDb.ref('bc_typing/lounge/' + loungeNick).set(true);
+  clearTimeout(loungeTypingTimer);
+  loungeTypingTimer = setTimeout(() => {
+    fbDb.ref('bc_typing/lounge/' + loungeNick).remove();
+  }, 2000);
+}
+
+function listenLoungeTyping() {
+  fbDb.ref('bc_typing/lounge').on('value', snap => {
+    const data = snap.val() || {};
+    const typers = Object.keys(data).filter(u => u !== loungeNick);
+    const el = document.getElementById('lounge-typing');
+    el.textContent = typers.length ? typers.join(', ') + (typers.length===1?' is':' are') + ' typing…' : '';
+  });
+}
+
+
+/* ═══════════════════════════════
+   BRITTY BOT (in Firebase Lounge)
+═══════════════════════════════ */
+const BRITTY = {
+  nick: 'Britty',
+  username: 'brittybot',
+  avatar: '🤖',
+  color: '#aa88ff',
+  model: 'meta-llama/llama-4-maverick',
+  cooldownMs: 4000,
+  // IMPORTANT: Replace with your actual OpenRouter API key
+  apiKey: 'sk-or-v1-YOUR_KEY_HERE',
+};
+
+let brittyLastReply = 0;
+let brittyBusy = false;
+let brittyLastMsgKey = '';
+
+async function brittyAsk(text, fromUser) {
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + BRITTY.apiKey,
+        'HTTP-Referer': 'https://britchat.co.uk',
+        'X-Title': 'BritChat',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: BRITTY.model,
+        max_tokens: 60,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are Britty, a casual British chatter in the BritChat Lounge. Keep replies VERY SHORT — often 1 sentence or a few words. Natural British slang (mate, cheers, proper, wicked, alright). Talk to ' + fromUser + ' like a regular mate, not a bot. Lowercase is fine. Don\'t use their name too much.'
+          },
+          { role: 'user', content: text }
+        ]
+      })
+    });
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content?.trim() || null;
+  } catch(e) {
+    console.error('Britty AI error:', e);
+    return null;
+  }
+}
+
+async function brittyPost(text) {
+  if (!fbDb) return;
+  await fbDb.ref('bc_msgs/lounge').push({
+    username: BRITTY.username,
+    name: BRITTY.nick,
+    text,
+    ts: Date.now(),
+    color: BRITTY.color,
+    avatar: BRITTY.avatar
+  });
+}
+
+// Called whenever a new message appears in the Lounge
+async function brittyMaybeReply(msg) {
+  if (!loungeOpen) return;
+  if (!msg || !msg.text) return;
+  if (msg.username === BRITTY.username) return; // never reply to self
+
+  // Dedupe — only process each message once
+  const key = msg.username + '|' + msg.ts + '|' + msg.text;
+  if (key === brittyLastMsgKey) return;
+  brittyLastMsgKey = key;
+
+  if (brittyBusy) return;
+
+  const lower = msg.text.toLowerCase();
+  const mentioned = lower.includes('britty');
+  const cooled = (Date.now() - brittyLastReply) >= BRITTY.cooldownMs;
+  if (!mentioned && !cooled) return;
+
+  brittyBusy = true;
+  try {
+    const reply = await brittyAsk(msg.text, msg.name || msg.username);
+    if (reply) {
+      // Natural typing delay
+      await new Promise(r => setTimeout(r, 500 + Math.random() * 1200));
+      await brittyPost(reply);
+      brittyLastReply = Date.now();
+    }
+  } finally {
+    brittyBusy = false;
+  }
+}
+
+// Hook Britty into the message listener
+// (must be called AFTER listenLoungeMessages is set up)
+function enableBritty() {
+  if (!fbDb) return;
+  // Watch for new messages being added
+  fbDb.ref('bc_msgs/lounge').limitToLast(1).on('child_added', snap => {
+    const msg = snap.val();
+    if (!msg) return;
+    // Only react to messages from AFTER Britty was enabled (not historical)
+    if (msg.ts < Date.now() - 5000) return;
+    brittyMaybeReply(msg);
+  });
+}
+
+</script>
+</body>
+</html>
