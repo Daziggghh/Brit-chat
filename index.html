@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>BritWorld · After Dark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+:root{
+  --ink:#08080c;
+  --ink2:#0f0f14;
+  --surface:#14141b;
+  --muted:#8a8a9a;
+  --text:#e8e4dc;
+  --text2:#b5b0a5;
+  --gold:#c89b3c;
+  --gold2:#e6b456;
+  --amber:#d97a3a;
+  --neon:#ff3b6b;
+  --neon2:#3bafff;
+  --wine:#6b1e2c;
+  --display:'Cormorant Garamond',serif;
+  --mono:'Space Mono',monospace;
+  --ui:'Outfit',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;background:#000;color:var(--text);font-family:var(--ui);overflow:hidden;touch-action:none}
+canvas{image-rendering:pixelated;image-rendering:-moz-crisp-edges}
+
+#login{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(ellipse at 50% 100%, #1a1218 0%, #050307 70%)}
+#login::before{
+  content:'';position:absolute;inset:0;opacity:.5;pointer-events:none;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(200,155,60,.08) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(255,59,107,.06) 0%, transparent 40%);
+}
+#login::after{
+  content:'';position:absolute;inset:0;pointer-events:none;opacity:.04;
+  background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.5) 0px,rgba(255,255,255,.5) 1px,transparent 1px,transparent 3px);
+  animation:grain .5s steps(2) infinite;
+}
+@keyframes grain{0%{transform:translate(0,0)}50%{transform:translate(-1px,1px)}100%{transform:translate(0,0)}}
+
+.title-block{text-align:center;margin-bottom:38px;position:relative;z-index:1}
+.over-title{font-family:var(--mono);font-size:10px;color:var(--gold);
+  letter-spacing:6px;text-transform:uppercase;margin-bottom:18px;opacity:.9}
+.over-title::before, .over-title::after{content:'—';margin:0 10px;opacity:.5}
+
+.main-title{font-family:var(--display);font-size:clamp(54px,14vw,96px);
+  font-weight:300;line-height:.9;letter-spacing:-2px;color:var(--text);font-style:italic}
+.main-title .and{font-family:var(--mono);font-style:normal;font-weight:400;
+  font-size:.4em;color:var(--gold);letter-spacing:8px;vertical-align:middle;
+  margin:0 6px;text-transform:uppercase}
+.main-title strong{font-weight:600;font-style:normal;color:var(--gold2)}
+
+.subtitle{font-family:var(--display);font-size:20px;font-style:italic;
+  color:var(--text2);margin-top:16px;font-weight:300;letter-spacing:.5px;
+  max-width:400px;line-height:1.3}
+
+.login-card{width:100%;max-width:420px;
+  background:linear-gradient(180deg,rgba(20,20,27,.92),rgba(8,8,12,.96));
+  border:1px solid rgba(200,155,60,.25);padding:26px;
+  backdrop-filter:blur(12px);position:relative;z-index:1;
+  box-shadow:0 24px 60px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.04)}
+.login-card::before{content:'';position:absolute;top:-1px;left:20%;right:20%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+
+.field-label{font-family:var(--mono);font-size:9px;color:var(--gold);
+  letter-spacing:3px;text-transform:uppercase;display:block;margin-bottom:10px;opacity:.9}
+
+#nick{width:100%;padding:14px 16px;background:rgba(8,8,12,.6);
+  border:1px solid rgba(200,155,60,.2);border-bottom:2px solid var(--gold);
+  color:var(--text);font-family:var(--display);font-size:22px;font-style:italic;
+  outline:none;transition:all .2s;margin-bottom:22px}
+#nick:focus{border-color:var(--gold);background:rgba(200,155,60,.05)}
+#nick::placeholder{color:var(--muted);font-style:italic;opacity:.7}
+
+.avatar-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:20px}
+.av{aspect-ratio:1;background:rgba(8,8,12,.5);border:1px solid rgba(200,155,60,.15);
+  cursor:pointer;padding:0;position:relative;overflow:hidden;transition:all .15s}
+.av:hover{border-color:rgba(200,155,60,.4);transform:translateY(-1px)}
+.av.sel{border-color:var(--gold);background:rgba(200,155,60,.1);
+  box-shadow:0 0 0 1px var(--gold), 0 4px 12px rgba(200,155,60,.25)}
+.av canvas{width:100%;height:100%;display:block}
+
+.enter{width:100%;padding:15px;background:var(--gold);border:none;
+  color:var(--ink);font-family:var(--mono);font-size:11px;font-weight:700;
+  letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.enter:hover{background:var(--gold2);letter-spacing:5px}
+.enter::after{content:'→';margin-left:8px;transition:transform .2s}
+.enter:hover::after{transform:translateX(4px)}
+
+.age-notice{font-family:var(--mono);font-size:9px;color:var(--muted);
+  letter-spacing:1px;margin-top:18px;text-align:center;position:relative;z-index:1;
+  max-width:380px;line-height:1.8}
+
+#world{position:fixed;inset:0;display:none;flex-direction:column;z-index:1;background:#000}
+#world.live{display:flex}
+
+.hud{position:absolute;top:0;left:0;right:0;z-index:50;display:flex;
+  justify-content:space-between;align-items:flex-start;padding:14px 18px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(0,0,0,.8),transparent 80%)}
+.hud-location{pointer-events:auto}
+.hud-place{font-family:var(--display);font-style:italic;font-size:18px;font-weight:400;
+  color:var(--text);line-height:1;letter-spacing:.3px}
+.hud-sub{font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:3px;
+  text-transform:uppercase;margin-top:3px;opacity:.9}
+.hud-right{display:flex;gap:8px;pointer-events:auto;align-items:center}
+.hud-count{font-family:var(--mono);font-size:10px;color:var(--text2);
+  letter-spacing:2px;padding:6px 11px;background:rgba(0,0,0,.55);
+  border:1px solid rgba(200,155,60,.15)}
+.hud-count .dot{display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--gold);margin-right:6px;animation:glow 2s ease-in-out infinite}
+@keyframes glow{0%,100%{opacity:.5}50%{opacity:1;box-shadow:0 0 8px rgba(200,155,60,.6)}}
+.hud-btn{width:34px;height:34px;background:rgba(0,0,0,.55);
+  border:1px solid rgba(200,155,60,.15);color:var(--text2);font-size:14px;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;font-family:var(--mono)}
+.hud-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+#canvas-wrap{flex:1;position:relative;overflow:hidden;background:#000}
+#game{position:absolute;inset:0;width:100%;height:100%}
+
+#canvas-wrap::after{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:20;opacity:.06;
+  background-image:repeating-linear-gradient(0deg,rgba(255,255,255,1) 0px,rgba(255,255,255,1) 1px,transparent 1px,transparent 2px);
+  mix-blend-mode:overlay;animation:grainMove .3s steps(3) infinite}
+@keyframes grainMove{0%{transform:translate(0,0)}33%{transform:translate(-1px,1px)}66%{transform:translate(1px,-1px)}100%{transform:translate(0,0)}}
+
+.bubble{position:absolute;background:rgba(20,20,27,.96);backdrop-filter:blur(8px);
+  border:1px solid rgba(200,155,60,.4);padding:6px 11px;
+  font-family:var(--display);font-size:15px;color:var(--text);
+  max-width:200px;pointer-events:none;white-space:pre-wrap;word-wrap:break-word;
+  transform:translate(-50%,-100%);z-index:30;line-height:1.3;letter-spacing:.2px;
+  box-shadow:0 6px 20px rgba(0,0,0,.6)}
+.bubble.me{border-color:var(--gold)}
+
+.nametag{position:absolute;font-family:var(--mono);font-size:9px;
+  color:var(--text2);padding:2px 8px;background:rgba(0,0,0,.65);
+  transform:translate(-50%,-100%);pointer-events:none;z-index:25;
+  letter-spacing:2px;white-space:nowrap;text-transform:uppercase;
+  border-left:2px solid var(--gold)}
+
+.chat-bar{position:absolute;bottom:0;left:0;right:0;z-index:40;
+  background:linear-gradient(0deg,rgba(0,0,0,.95),rgba(0,0,0,.4));
+  padding:16px 18px;display:flex;gap:10px;align-items:center}
+#chat-input{flex:1;padding:12px 16px;background:rgba(20,20,27,.9);backdrop-filter:blur(10px);
+  border:1px solid rgba(200,155,60,.2);border-bottom:2px solid rgba(200,155,60,.5);
+  color:var(--text);font-family:var(--display);font-size:17px;font-style:italic;outline:none;transition:border .2s}
+#chat-input:focus{border-bottom-color:var(--gold)}
+#chat-input::placeholder{color:var(--muted);font-style:italic}
+.send-btn{padding:12px 18px;background:transparent;border:1px solid var(--gold);
+  color:var(--gold);font-family:var(--mono);font-size:10px;cursor:pointer;
+  letter-spacing:3px;text-transform:uppercase;transition:all .15s}
+.send-btn:hover{background:var(--gold);color:var(--ink)}
+
+#joy{position:absolute;bottom:80px;left:18px;width:100px;height:100px;z-index:35;touch-action:none}
+.joy-base{position:absolute;inset:0;background:rgba(0,0,0,.45);
+  border:1px solid rgba(200,155,60,.3);border-radius:50%;backdrop-filter:blur(6px)}
+.joy-stick{position:absolute;top:50%;left:50%;width:42px;height:42px;
+  background:var(--gold);border:2px solid var(--ink);border-radius:50%;
+  transform:translate(-50%,-50%);box-shadow:0 4px 10px rgba(0,0,0,.7)}
+
+@media(min-width:768px) and (hover:hover){
+  #joy{display:none}
+  .desktop-hint{display:block}
+}
+.desktop-hint{display:none;position:absolute;bottom:80px;left:18px;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(6px);border-left:2px solid var(--gold);
+  padding:10px 14px;font-family:var(--mono);font-size:10px;color:var(--text2);
+  letter-spacing:1.5px;z-index:35;line-height:1.8;text-transform:uppercase}
+.desktop-hint .k{color:var(--gold);font-weight:700}
+
+.door-prompt{position:absolute;bottom:170px;left:50%;transform:translateX(-50%);
+  background:rgba(8,8,12,.9);backdrop-filter:blur(10px);
+  border:1px solid var(--gold);padding:12px 22px;
+  font-family:var(--mono);font-size:10px;color:var(--gold);
+  letter-spacing:3px;text-transform:uppercase;z-index:36;
+  pointer-events:none;animation:promptPulse 1.8s ease-in-out infinite;display:none}
+.door-prompt.show{display:block}
+.door-prompt .k{background:var(--gold);color:var(--ink);padding:2px 6px;margin-right:8px;font-weight:700}
+@keyframes promptPulse{0%,100%{box-shadow:0 0 20px rgba(200,155,60,.3)}50%{box-shadow:0 0 32px rgba(200,155,60,.6)}}
+
+#loading{position:fixed;inset:0;z-index:999;display:flex;align-items:center;
+  justify-content:center;background:#000;flex-direction:column;gap:16px}
+.load-logo{font-family:var(--display);font-size:32px;font-style:italic;color:var(--gold);letter-spacing:2px}
+.load-dots{font-family:var(--mono);color:var(--text2);letter-spacing:8px;font-size:10px;animation:loadPulse 1.2s ease-in-out infinite}
+@keyframes loadPulse{0%,100%{opacity:.4}50%{opacity:1}}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="load-logo">BritWorld</div>
+  <div class="load-dots">• • •</div>
+</div>
+
+<div id="login">
+  <div class="title-block">
+    <div class="over-title">Est. 2026 · UK only</div>
+    <h1 class="main-title">Brit<strong>World</strong><br><span class="and">After</span>Dark</h1>
+    <div class="subtitle">A walkable world for late-night conversations.<br>Step inside.</div>
+  </div>
+
+  <div class="login-card">
+    <span class="field-label">Your Name</span>
+    <input id="nick" type="text" placeholder="What do they call you?" maxlength="16" autocomplete="off" autocapitalize="off">
+    <span class="field-label">Pick Your Character</span>
+    <div class="avatar-grid" id="avatar-grid"></div>
+    <button class="enter" onclick="enterWorld()">Enter the World</button>
+  </div>
+
+  <div class="age-notice">18+ · A quiet place. Be kind. Mind your manners.</div>
+</div>
+
+<div id="world">
+  <div class="hud">
+    <div class="hud-location">
+      <div class="hud-place" id="place-name">The Square</div>
+      <div class="hud-sub" id="place-sub">Soho · Late Evening</div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-count" id="online-count"><span class="dot"></span>0 HERE</div>
+      <button class="hud-btn" onclick="showHelp()">?</button>
+      <button class="hud-btn" onclick="leaveWorld()">×</button>
+    </div>
+  </div>
+
+  <div id="canvas-wrap"><canvas id="game"></canvas></div>
+
+  <div class="door-prompt" id="door-prompt"><span class="k">E</span><span id="door-prompt-text">Enter</span></div>
+
+  <div class="desktop-hint">
+    <span class="k">WASD</span> walk<br>
+    <span class="k">E</span> enter<br>
+    <span class="k">↵</span> chat
+  </div>
+  <div id="joy"><div class="joy-base"></div><div class="joy-stick" id="joy-stick"></div></div>
+
+  <div class="chat-bar">
+    <input id="chat-input" type="text" placeholder="Say something..." maxlength="140" autocomplete="off">
+    <button class="send-btn" onclick="sendChat()">Send</button>
+  </div>
+</div>
+
+<script>
+const FB_CFG = { databaseURL: 'https://britchat-6faa5-default-rtdb.firebaseio.com' };
+let fbApp, fbDb;
+function initFB() {
+  if (fbApp) return;
+  fbApp = firebase.initializeApp(FB_CFG, 'britworld-v3');
+  fbDb  = firebase.database(fbApp);
+}
+
+const CHARACTERS = [
+  { skin:'#e8c39e', hair:'#1a1208', shirt:'#6b1e2c', trousers:'#2a2018' },
+  { skin:'#d4a27e', hair:'#3a2410', shirt:'#1a3a5a', trousers:'#141018' },
+  { skin:'#f0d4a8', hair:'#c89b3c', shirt:'#1a1a22', trousers:'#2a2a35' },
+  { skin:'#a0785a', hair:'#0a0806', shirt:'#4a3a2a', trousers:'#1a1410' },
+  { skin:'#e8c39e', hair:'#5a1a1a', shirt:'#0a0a0f', trousers:'#1a1a22' },
+  { skin:'#b8896a', hair:'#2a1a10', shirt:'#3a6b4a', trousers:'#2a2018' },
+  { skin:'#c8987a', hair:'#8a5a2a', shirt:'#6a2a4a', trousers:'#1a1418' },
+  { skin:'#f0d4a8', hair:'#1a1a1a', shirt:'#5a5a6a', trousers:'#1a1a22' },
+  { skin:'#a0785a', hair:'#2a1a10', shirt:'#c89b3c', trousers:'#1a1410' },
+  { skin:'#e8c39e', hair:'#a0744a', shirt:'#2a4a5a', trousers:'#1a1a22' },
+  { skin:'#d4a27e', hair:'#1a1208', shirt:'#6a3a5a', trousers:'#2a2018' },
+  { skin:'#b8896a', hair:'#3a2a20', shirt:'#1a2a3a', trousers:'#141018' },
+];
+let selectedIdx = 0;
+
+function drawPerson(ctx, px, py, char, walking=false) {
+  const x = Math.round(px - 10);
+  const y = Math.round(py - 36);
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.beginPath(); ctx.ellipse(px, py + 1, 11, 3.5, 0, 0, Math.PI*2); ctx.fill();
+  const bob = walking ? Math.sin(Date.now() / 110) * 1 : 0;
+  const by = y + bob;
+  ctx.fillStyle = char.trousers;
+  if (walking) {
+    const ls = Math.sin(Date.now() / 120) * 1.5;
+    ctx.fillRect(x + 5, by + 26, 3, 10 - Math.abs(ls));
+    ctx.fillRect(x + 12, by + 26, 3, 10 + Math.abs(ls));
+  } else {
+    ctx.fillRect(x + 5, by + 26, 3, 10);
+    ctx.fillRect(x + 12, by + 26, 3, 10);
+  }
+  ctx.fillStyle = '#0a0806';
+  ctx.fillRect(x + 4, by + 34, 5, 2);
+  ctx.fillRect(x + 11, by + 34, 5, 2);
+  ctx.fillStyle = char.shirt;
+  ctx.fillRect(x + 4, by + 14, 12, 13);
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.fillRect(x + 4, by + 14, 3, 13);
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillRect(x + 14, by + 14, 2, 13);
+  ctx.fillStyle = char.shirt;
+  if (walking) {
+    const as = Math.sin(Date.now() / 120) * 1.5;
+    ctx.fillRect(x + 1, by + 15 - as*0.5, 3, 10);
+    ctx.fillRect(x + 16, by + 15 + as*0.5, 3, 10);
+  } else {
+    ctx.fillRect(x + 1, by + 15, 3, 10);
+    ctx.fillRect(x + 16, by + 15, 3, 10);
+  }
+  ctx.fillStyle = char.skin;
+  ctx.fillRect(x + 1, by + 24, 3, 2);
+  ctx.fillRect(x + 16, by + 24, 3, 2);
+  ctx.fillRect(x + 8, by + 12, 4, 3);
+  ctx.fillRect(x + 6, by + 4, 8, 9);
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.fillRect(x + 6, by + 4, 2, 9);
+  ctx.fillStyle = char.hair;
+  ctx.fillRect(x + 5, by + 2, 10, 3);
+  ctx.fillRect(x + 5, by + 3, 2, 5);
+  ctx.fillRect(x + 13, by + 3, 2, 5);
+  ctx.fillRect(x + 6, by + 5, 1, 1);
+  ctx.fillRect(x + 13, by + 5, 1, 1);
+  ctx.fillStyle = '#0a0806';
+  ctx.fillRect(x + 7, by + 8, 1, 1);
+  ctx.fillRect(x + 12, by + 8, 1, 1);
+  ctx.fillStyle = 'rgba(70,30,30,0.5)';
+  ctx.fillRect(x + 9, by + 11, 2, 1);
+}
+
+function drawAvatarPreview(canvas, char) {
+  const c = canvas.getContext('2d');
+  c.imageSmoothingEnabled = false;
+  const w = canvas.width = 48, h = canvas.height = 48;
+  c.clearRect(0,0,w,h);
+  const g = c.createRadialGradient(w/2, h, 0, w/2, h, h);
+  g.addColorStop(0, 'rgba(200,155,60,.08)');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = g; c.fillRect(0,0,w,h);
+  c.save();
+  c.translate(w/2, h - 4);
+  c.scale(1.1, 1.1);
+  drawPerson(c, 0, 0, char);
+  c.restore();
+}
+
+function renderAvatars() {
+  const grid = document.getElementById('avatar-grid');
+  grid.innerHTML = CHARACTERS.map((c,i) =>
+    `<div class="av${i===0?' sel':''}" onclick="pickAvatar(this, ${i})"><canvas></canvas></div>`
+  ).join('');
+  CHARACTERS.forEach((c, i) => {
+    const cv = grid.children[i].querySelector('canvas');
+    drawAvatarPreview(cv, c);
+  });
+}
+function pickAvatar(el, idx) {
+  document.querySelectorAll('.av').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedIdx = idx;
+}
+
+const ROOMS = {
+  square: {
+    name: 'The Square', sub: 'Soho · Late Evening',
+    width: 1400, height: 900, spawn: { x: 700, y: 500 }, theme: 'street',
+    doors: [
+      { x: 210, y: 260, w: 60, h: 50, to: 'pub',     label: 'The Lamb & Flag' },
+      { x: 560, y: 260, w: 60, h: 50, to: 'jazz',    label: 'The Blue Note' },
+      { x: 900, y: 260, w: 60, h: 50, to: 'arcade',  label: 'Neon Alley' },
+      { x: 1240, y: 260, w: 60, h: 50, to: 'gallery', label: 'The Gilded Frame' },
+    ]
+  },
+  pub: {
+    name: 'The Lamb & Flag', sub: 'Pub · Established 1623',
+    width: 900, height: 600, spawn: { x: 450, y: 520 }, theme: 'pub',
+    doors: [ { x: 420, y: 540, w: 60, h: 50, to: 'square', label: 'Back outside' } ]
+  },
+  jazz: {
+    name: 'The Blue Note', sub: 'Jazz Lounge · Live Tonight',
+    width: 900, height: 600, spawn: { x: 450, y: 520 }, theme: 'jazz',
+    doors: [ { x: 420, y: 540, w: 60, h: 50, to: 'square', label: 'Back outside' } ]
+  },
+  arcade: {
+    name: 'Neon Alley', sub: 'Underground Arcade · 24hr',
+    width: 900, height: 600, spawn: { x: 450, y: 520 }, theme: 'arcade',
+    doors: [ { x: 420, y: 540, w: 60, h: 50, to: 'square', label: 'Back outside' } ]
+  },
+  gallery: {
+    name: 'The Gilded Frame', sub: 'Private Gallery · By Invitation',
+    width: 900, height: 600, spawn: { x: 450, y: 520 }, theme: 'gallery',
+    doors: [ { x: 420, y: 540, w: 60, h: 50, to: 'square', label: 'Back outside' } ]
+  }
+};
+
+let currentRoom = 'square';
+let WORLD = ROOMS.square;
+let me = { id:null, nick:'', charIdx:0, x:700, y:500, walking:false, room:'square' };
+let players = {};
+let bubbles = {};
+let nearDoor = null;
+let transitioning = 0;
+
+let canvas, ctx;
+let camera = { x:0, y:0 };
+let lastTime = 0;
+let keys = {};
+let joyVec = { x:0, y:0 };
+
+function initCanvas() {
+  canvas = document.getElementById('game');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+}
+function resizeCanvas() {
+  if (!canvas) return;
+  const wrap = document.getElementById('canvas-wrap');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = wrap.clientWidth * dpr;
+  canvas.height = wrap.clientHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+}
+
+function drawWorld() {
+  const vw = canvas.clientWidth, vh = canvas.clientHeight;
+  camera.x = Math.max(0, Math.min(Math.max(0, WORLD.width - vw), me.x - vw/2));
+  camera.y = Math.max(0, Math.min(Math.max(0, WORLD.height - vh), me.y - vh/2));
+  ctx.clearRect(0, 0, vw, vh);
+
+  if (WORLD.theme === 'street')       drawStreetScene(vw, vh);
+  else if (WORLD.theme === 'pub')     drawPubScene(vw, vh);
+  else if (WORLD.theme === 'jazz')    drawJazzScene(vw, vh);
+  else if (WORLD.theme === 'arcade')  drawArcadeScene(vw, vh);
+  else if (WORLD.theme === 'gallery') drawGalleryScene(vw, vh);
+
+  drawDoors(vw, vh);
+
+  const all = [me, ...Object.values(players)].sort((a,b) => a.y - b.y);
+  for (const p of all) {
+    drawPerson(ctx, p.x - camera.x, p.y - camera.y, CHARACTERS[p.charIdx || 0], p.walking);
+  }
+
+  updatePlayerOverlays();
+
+  if (WORLD.theme === 'street') drawStreetLights(vw, vh);
+
+  if (transitioning > 0) {
+    ctx.fillStyle = `rgba(0,0,0,${Math.min(1, transitioning/500)})`;
+    ctx.fillRect(0, 0, vw, vh);
+  }
+
+  const prompt = document.getElementById('door-prompt');
+  if (nearDoor && !transitioning) {
+    prompt.classList.add('show');
+    document.getElementById('door-prompt-text').textContent = nearDoor.label;
+  } else {
+    prompt.classList.remove('show');
+  }
+}
+
+function drawStreetScene(vw, vh) {
+  const sky = ctx.createLinearGradient(0, 0, 0, vh);
+  sky.addColorStop(0, '#0a0e1a');
+  sky.addColorStop(0.5, '#141828');
+  sky.addColorStop(1, '#0a0810');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, vw, vh);
+
+  const par1 = (camera.x * 0.2);
+  ctx.fillStyle = '#0f131c';
+  for (let i = 0; i < 8; i++) {
+    const bx = (i * 200 - par1 % 200) - 100;
+    const bh = 80 + (i % 3) * 30;
+    ctx.fillRect(bx, 60, 160, bh);
+    for (let wx = 0; wx < 3; wx++) {
+      for (let wy = 0; wy < 4; wy++) {
+        if ((i + wx + wy) % 5 === 0) {
+          ctx.fillStyle = '#3a2a10';
+          ctx.fillRect(bx + 25 + wx * 45, 80 + wy * 18, 8, 10);
+          ctx.fillStyle = 'rgba(200,155,60,0.4)';
+          ctx.fillRect(bx + 26 + wx * 45, 81 + wy * 18, 6, 8);
+          ctx.fillStyle = '#0f131c';
+        }
+      }
+    }
+  }
+
+  const groundY = 340 - camera.y;
+  const g = ctx.createLinearGradient(0, groundY, 0, groundY + 600);
+  g.addColorStop(0, '#1a1820');
+  g.addColorStop(1, '#0a0810');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, groundY, vw, vh - groundY);
+
+  ctx.strokeStyle = 'rgba(200,200,200,0.04)';
+  ctx.lineWidth = 1;
+  for (let y = groundY; y < vh; y += 20) {
+    const offset = ((y - groundY) / 20) % 2 ? 20 : 0;
+    for (let x = (offset - camera.x) % 40; x < vw; x += 40) {
+      ctx.strokeRect(x, y, 40, 20);
+    }
+  }
+
+  drawStreetFrontage( 130 - camera.x, 130 - camera.y, 300, 210, 'THE LAMB & FLAG', '#3a1a1a', '#c89b3c');
+  drawStreetFrontage( 480 - camera.x, 140 - camera.y, 300, 200, 'THE BLUE NOTE',   '#1a1a2e', '#3bafff');
+  drawStreetFrontage( 820 - camera.x, 130 - camera.y, 300, 210, 'NEON ALLEY',      '#1a0a1e', '#ff3b6b');
+  drawStreetFrontage(1160 - camera.x, 140 - camera.y, 300, 200, 'THE GILDED FRAME','#1a1410', '#d9b85a');
+
+  drawLampPost(340 - camera.x, 550 - camera.y);
+  drawLampPost(740 - camera.x, 560 - camera.y);
+  drawLampPost(1100 - camera.x, 550 - camera.y);
+
+  drawBench(500 - camera.x, 620 - camera.y);
+  drawBench(900 - camera.x, 640 - camera.y);
+
+  ctx.fillStyle = 'rgba(60,70,100,0.2)';
+  ctx.beginPath();
+  ctx.ellipse(600 - camera.x, 720 - camera.y, 40, 8, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(200,155,60,0.15)';
+  ctx.fillRect(600 - camera.x - 30, 720 - camera.y - 2, 60, 2);
+}
+
+function drawStreetFrontage(x, y, w, h, name, wallCol, signCol) {
+  ctx.fillStyle = wallCol;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(x, y, w, 18);
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 1;
+  for (let ly = y + 30; ly < y + h; ly += 24) {
+    ctx.beginPath(); ctx.moveTo(x, ly); ctx.lineTo(x + w, ly); ctx.stroke();
+  }
+  ctx.shadowColor = signCol;
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = signCol;
+  ctx.font = 'bold 14px "Space Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(name, x + w/2, y + 55);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = signCol;
+  ctx.fillRect(x + w/2 - 60, y + 62, 120, 2);
+  const winCount = Math.floor(w / 80);
+  for (let i = 0; i < winCount; i++) {
+    const wx = x + 30 + i * ((w - 60) / winCount);
+    const wy = y + 100;
+    ctx.fillStyle = 'rgba(10,5,2,0.8)';
+    ctx.fillRect(wx, wy, 50, 60);
+    const wg = ctx.createRadialGradient(wx + 25, wy + 30, 5, wx + 25, wy + 30, 40);
+    wg.addColorStop(0, 'rgba(200,155,60,0.8)');
+    wg.addColorStop(1, 'rgba(200,155,60,0)');
+    ctx.fillStyle = wg;
+    ctx.fillRect(wx - 20, wy - 20, 90, 100);
+    ctx.strokeStyle = '#0a0806';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(wx, wy, 50, 60);
+    ctx.beginPath();
+    ctx.moveTo(wx + 25, wy); ctx.lineTo(wx + 25, wy + 60);
+    ctx.moveTo(wx, wy + 30); ctx.lineTo(wx + 50, wy + 30);
+    ctx.stroke();
+  }
+  const sg = ctx.createLinearGradient(0, y + h, 0, y + h + 30);
+  sg.addColorStop(0, 'rgba(0,0,0,0.5)');
+  sg.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = sg;
+  ctx.fillRect(x, y + h, w, 30);
+}
+
+function drawLampPost(x, y) {
+  ctx.fillStyle = '#1a1410';
+  ctx.fillRect(x - 2, y - 80, 4, 80);
+  ctx.fillRect(x - 6, y - 4, 12, 8);
+  ctx.fillStyle = '#2a2018';
+  ctx.fillRect(x - 8, y - 92, 16, 14);
+  ctx.fillStyle = '#fff3c0';
+  ctx.fillRect(x - 5, y - 90, 10, 10);
+}
+
+function drawStreetLights(vw, vh) {
+  const lamps = [{x: 340, y: 460}, {x: 740, y: 470}, {x: 1100, y: 460}];
+  for (const l of lamps) {
+    const sx = l.x - camera.x, sy = l.y - camera.y;
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 200);
+    g.addColorStop(0, 'rgba(255,220,140,0.18)');
+    g.addColorStop(0.5, 'rgba(255,180,90,0.08)');
+    g.addColorStop(1, 'rgba(255,180,90,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(sx, sy, 200, 0, Math.PI*2); ctx.fill();
+  }
+  const vg = ctx.createRadialGradient(vw/2, vh/2, vw*0.3, vw/2, vh/2, vw*0.8);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, vw, vh);
+}
+
+function drawBench(x, y) {
+  ctx.fillStyle = '#1a1410';
+  ctx.fillRect(x, y, 80, 4);
+  ctx.fillRect(x + 4, y + 4, 4, 12);
+  ctx.fillRect(x + 72, y + 4, 4, 12);
+  ctx.fillStyle = 'rgba(200,155,60,0.1)';
+  ctx.fillRect(x, y - 1, 80, 1);
+}
+
+function drawPubScene(vw, vh) {
+  ctx.fillStyle = '#1a1008';
+  ctx.fillRect(0, 0, vw, vh);
+  ctx.fillStyle = '#251808';
+  for (let y = (-camera.y) % 32; y < vh; y += 32) ctx.fillRect(0, y, vw, 1);
+  const wallH = 130, wallY = -camera.y;
+  const wg = ctx.createLinearGradient(0, wallY, 0, wallY + wallH);
+  wg.addColorStop(0, '#1a0a0a'); wg.addColorStop(1, '#3a1a18');
+  ctx.fillStyle = wg; ctx.fillRect(0, wallY, vw, wallH);
+  ctx.fillStyle = '#1a0a04';
+  ctx.fillRect(0, wallY + wallH - 8, vw, 8);
+
+  const shelfY = 40 - camera.y;
+  ctx.fillStyle = '#0a0402';
+  ctx.fillRect(100 - camera.x, shelfY, 600, 70);
+  const bottleColours = ['#6b1e2c','#2a1a0a','#3a3a1a','#1a3a2a','#4a2a1a','#6a5a2a'];
+  for (let i = 0; i < 20; i++) {
+    const bx = 120 - camera.x + i * 28;
+    ctx.fillStyle = bottleColours[i % bottleColours.length];
+    ctx.fillRect(bx, shelfY + 15, 6, 30);
+    ctx.fillRect(bx + 1, shelfY + 10, 4, 8);
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillRect(bx, shelfY + 18, 1, 20);
+  }
+  ctx.fillStyle = 'rgba(200,155,60,0.3)';
+  ctx.fillRect(100 - camera.x, shelfY + 62, 600, 2);
+
+  const barY = 160 - camera.y;
+  ctx.fillStyle = '#0a0402';
+  ctx.fillRect(60 - camera.x, barY + 5, 780, 65);
+  const barG = ctx.createLinearGradient(0, barY, 0, barY + 65);
+  barG.addColorStop(0, '#4a2810'); barG.addColorStop(0.5, '#6a3a1a'); barG.addColorStop(1, '#2a1008');
+  ctx.fillStyle = barG;
+  ctx.fillRect(60 - camera.x, barY, 780, 65);
+  ctx.fillStyle = 'rgba(255,220,140,0.15)';
+  ctx.fillRect(60 - camera.x, barY, 780, 2);
+
+  for (let i = 0; i < 4; i++) {
+    const tx = 180 - camera.x + i * 150;
+    ctx.fillStyle = '#c89b3c';
+    ctx.fillRect(tx, barY - 35, 4, 30);
+    ctx.fillRect(tx - 3, barY - 38, 10, 4);
+    ctx.fillStyle = '#0a0806';
+    ctx.fillRect(tx + 4, barY - 30, 8, 4);
+  }
+
+  drawPubTable(200 - camera.x, 380 - camera.y);
+  drawPubTable(430 - camera.x, 420 - camera.y);
+  drawPubTable(680 - camera.x, 390 - camera.y);
+
+  const fx = 60 - camera.x, fy = 40 - camera.y;
+  ctx.fillStyle = '#0a0402';
+  ctx.fillRect(fx, fy, 50, 90);
+  const fireG = ctx.createRadialGradient(fx + 25, fy + 70, 5, fx + 25, fy + 70, 30);
+  fireG.addColorStop(0, '#fff5c0'); fireG.addColorStop(0.3, '#ff9030'); fireG.addColorStop(1, '#8a2010');
+  ctx.fillStyle = fireG;
+  ctx.fillRect(fx + 6, fy + 40, 38, 48);
+
+  const glow = ctx.createRadialGradient(fx + 25, fy + 70, 20, fx + 25, fy + 70, 250);
+  glow.addColorStop(0, 'rgba(255,130,60,0.15)'); glow.addColorStop(1, 'rgba(255,130,60,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(fx - 220, fy - 150, 500, 500);
+
+  const vg = ctx.createRadialGradient(vw/2, vh/2, vw*0.3, vw/2, vh/2, vw*0.8);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.6)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, vw, vh);
+}
+
+function drawPubTable(x, y) {
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.beginPath(); ctx.ellipse(x, y + 6, 30, 7, 0, 0, Math.PI*2); ctx.fill();
+  const tg = ctx.createRadialGradient(x, y-3, 2, x, y-3, 28);
+  tg.addColorStop(0, '#5a3018'); tg.addColorStop(1, '#2a1810');
+  ctx.fillStyle = tg;
+  ctx.beginPath(); ctx.ellipse(x, y, 28, 22, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(160,90,40,0.8)';
+  ctx.fillRect(x - 3, y - 8, 6, 8);
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.fillRect(x - 3, y - 8, 1, 8);
+}
+
+function drawJazzScene(vw, vh) {
+  const bg = ctx.createLinearGradient(0, 0, 0, vh);
+  bg.addColorStop(0, '#0a0a1a'); bg.addColorStop(1, '#1a0a2a');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, vw, vh);
+
+  const wallY = -camera.y;
+  ctx.fillStyle = '#0a0a1e';
+  ctx.fillRect(0, wallY, vw, 120);
+
+  const sx = 280 - camera.x, sy = 100 - camera.y;
+  ctx.fillStyle = '#2a0a1a';
+  ctx.fillRect(sx - 10, sy + 40, 340, 60);
+  ctx.fillStyle = '#1a0510';
+  ctx.fillRect(sx - 10, sy + 95, 340, 5);
+
+  const spotG = ctx.createLinearGradient(sx + 160, sy, sx + 160, sy + 200);
+  spotG.addColorStop(0, 'rgba(59,175,255,0.15)');
+  spotG.addColorStop(1, 'rgba(59,175,255,0)');
+  ctx.fillStyle = spotG;
+  ctx.beginPath();
+  ctx.moveTo(sx + 160, sy); ctx.lineTo(sx - 40, sy + 200); ctx.lineTo(sx + 360, sy + 200); ctx.closePath();
+  ctx.fill();
+
+  const bassX = sx + 60, bassY = sy + 50;
+  ctx.fillStyle = '#5a3a1a';
+  ctx.fillRect(bassX, bassY, 14, 40);
+  ctx.fillStyle = '#3a2510';
+  ctx.fillRect(bassX + 6, bassY - 15, 2, 20);
+
+  const pX = sx + 130, pY = sy + 60;
+  ctx.fillStyle = '#0a0806';
+  ctx.fillRect(pX, pY, 70, 28);
+  ctx.fillStyle = '#f0e8d4';
+  ctx.fillRect(pX + 5, pY + 20, 60, 6);
+  ctx.fillStyle = '#0a0806';
+  for (let i = 0; i < 10; i++) {
+    if (i % 3 !== 0) ctx.fillRect(pX + 8 + i * 6, pY + 20, 3, 4);
+  }
+
+  const mX = sx + 240, mY = sy + 45;
+  ctx.fillStyle = '#2a2a2e';
+  ctx.fillRect(mX, mY, 2, 50);
+  ctx.fillStyle = '#0a0806';
+  ctx.fillRect(mX - 4, mY - 6, 10, 8);
+
+  ctx.shadowColor = '#3bafff';
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = '#3bafff';
+  ctx.font = 'bold 11px "Space Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('LIVE · TONIGHT', 560 - camera.x, 70 - camera.y);
+  ctx.shadowBlur = 0;
+
+  for (let i = 0; i < 5; i++) drawJazzTable(120 + i * 160 - camera.x, 320 - camera.y);
+  for (let i = 0; i < 4; i++) drawJazzTable(200 + i * 160 - camera.x, 450 - camera.y);
+
+  ctx.fillStyle = 'rgba(120,100,150,0.04)';
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath();
+    ctx.ellipse(300 + i * 150 - camera.x + Math.sin(Date.now()/2000 + i)*10, 300 - camera.y, 80, 40, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  const vg = ctx.createRadialGradient(vw/2, vh/2, vw*0.3, vw/2, vh/2, vw*0.8);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.7)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, vw, vh);
+}
+
+function drawJazzTable(x, y) {
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.beginPath(); ctx.ellipse(x, y + 6, 22, 5, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#1a0a1a';
+  ctx.beginPath(); ctx.ellipse(x, y, 22, 17, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,200,100,0.3)';
+  ctx.beginPath(); ctx.arc(x, y - 5, 12, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff5c0';
+  ctx.fillRect(x - 1, y - 8, 2, 4);
+  ctx.fillStyle = 'rgba(107,30,44,0.7)';
+  ctx.fillRect(x - 10, y - 5, 3, 5);
+  ctx.fillRect(x + 7, y - 5, 3, 5);
+}
+
+function drawArcadeScene(vw, vh) {
+  ctx.fillStyle = '#050008';
+  ctx.fillRect(0, 0, vw, vh);
+  ctx.strokeStyle = 'rgba(255,59,107,0.2)';
+  ctx.lineWidth = 1;
+  for (let x = (-camera.x) % 40; x < vw; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, vh); ctx.stroke();
+  }
+  for (let y = (-camera.y) % 40; y < vh; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(vw, y); ctx.stroke();
+  }
+  const wallY = -camera.y;
+  ctx.fillStyle = '#0a0008';
+  ctx.fillRect(0, wallY, vw, 110);
+  ctx.shadowColor = '#ff3b6b';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = '#ff3b6b';
+  ctx.fillRect(0, wallY + 105, vw, 3);
+  ctx.shadowBlur = 0;
+
+  ctx.shadowColor = '#ff3b6b';
+  ctx.shadowBlur = 30;
+  ctx.fillStyle = '#ff3b6b';
+  ctx.font = 'bold 22px "Space Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('NEON ALLEY', vw/2, wallY + 50);
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = '#3bafff';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = '#3bafff';
+  ctx.font = '10px "Space Mono", monospace';
+  ctx.fillText('// PRESS START //', vw/2, wallY + 75);
+  ctx.shadowBlur = 0;
+
+  drawModernArcade(130 - camera.x, 130 - camera.y, '#ff3b6b', 'RUNNER');
+  drawModernArcade(260 - camera.x, 130 - camera.y, '#3bafff', 'STRIKE');
+  drawModernArcade(390 - camera.x, 130 - camera.y, '#3dff8b', 'ZONE');
+  drawModernArcade(520 - camera.x, 130 - camera.y, '#c89b3c', 'KING');
+  drawModernArcade(650 - camera.x, 130 - camera.y, '#ff3b6b', 'WARP');
+
+  const px = 200 - camera.x, py = 340 - camera.y;
+  ctx.fillStyle = '#2a1a1a';
+  ctx.fillRect(px - 12, py - 12, 304, 144);
+  ctx.fillStyle = '#0a3028';
+  ctx.fillRect(px, py, 280, 120);
+  const balls = [{x:60,y:60,c:'#ff3b6b'},{x:90,y:40,c:'#c89b3c'},{x:90,y:80,c:'#3bafff'},{x:210,y:60,c:'#fff'}];
+  balls.forEach(b => {
+    ctx.shadowColor = b.c; ctx.shadowBlur = 8;
+    ctx.fillStyle = b.c;
+    ctx.beginPath(); ctx.arc(px + b.x, py + b.y, 5, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+
+  const vg = ctx.createRadialGradient(vw/2, vh/2, vw*0.2, vw/2, vh/2, vw*0.8);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.75)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, vw, vh);
+}
+
+function drawModernArcade(x, y, neon, label) {
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(x + 4, y + 160, 90, 8);
+  ctx.fillStyle = '#0a0a12';
+  ctx.fillRect(x, y, 90, 160);
+  ctx.fillStyle = '#1a1a22';
+  ctx.fillRect(x + 4, y + 4, 82, 156);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(x + 10, y + 16, 70, 55);
+  ctx.shadowColor = neon;
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = neon;
+  ctx.fillRect(x + 14, y + 22, 6, 6);
+  ctx.fillRect(x + 26, y + 30, 8, 4);
+  ctx.fillRect(x + 44, y + 28, 10, 6);
+  ctx.fillRect(x + 60, y + 42, 12, 8);
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = neon;
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = neon;
+  ctx.fillRect(x + 10, y + 75, 70, 2);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#f0e8d4';
+  ctx.font = 'bold 8px "Space Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, x + 45, y + 98);
+  ctx.fillStyle = '#ff3b6b';
+  ctx.beginPath(); ctx.arc(x + 25, y + 120, 5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#3bafff';
+  ctx.beginPath(); ctx.arc(x + 50, y + 120, 4, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#c89b3c';
+  ctx.beginPath(); ctx.arc(x + 62, y + 120, 4, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#3dff8b';
+  ctx.beginPath(); ctx.arc(x + 74, y + 120, 4, 0, Math.PI*2); ctx.fill();
+}
+
+function drawGalleryScene(vw, vh) {
+  const bg = ctx.createLinearGradient(0, 0, 0, vh);
+  bg.addColorStop(0, '#2a2418'); bg.addColorStop(0.4, '#1a1510'); bg.addColorStop(1, '#0a0806');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, vw, vh);
+
+  const wallH = 160, wallY = -camera.y;
+  const wg = ctx.createLinearGradient(0, wallY, 0, wallY + wallH);
+  wg.addColorStop(0, '#3a3024'); wg.addColorStop(1, '#2a2418');
+  ctx.fillStyle = wg;
+  ctx.fillRect(0, wallY, vw, wallH);
+  ctx.fillStyle = '#1a1410';
+  ctx.fillRect(0, wallY + wallH - 6, vw, 6);
+  ctx.fillStyle = '#c89b3c';
+  ctx.fillRect(0, wallY + wallH - 2, vw, 1);
+
+  drawFramedArt( 80 - camera.x, 30 - camera.y, 90, 100, ['#3a1a2a','#6b1e2c','#c89b3c']);
+  drawFramedArt( 220 - camera.x, 40 - camera.y, 120, 80, ['#1a2a3a','#3a4a5a','#6b8a9a']);
+  drawFramedArt( 390 - camera.x, 20 - camera.y, 100, 110, ['#2a2a1a','#5a5a2a','#c89b3c']);
+  drawFramedArt( 540 - camera.x, 40 - camera.y, 80, 80, ['#3a1a1a','#6a2a2a','#ff3b6b']);
+  drawFramedArt( 670 - camera.x, 25 - camera.y, 110, 100, ['#1a1a2a','#3a3a5a','#6a6aaa']);
+  drawFramedArt( 830 - camera.x, 35 - camera.y, 90, 90, ['#2a1a1a','#6a3a1a','#d97a3a']);
+
+  const floorY = wallH - camera.y;
+  ctx.fillStyle = '#1a1008';
+  ctx.fillRect(0, floorY, vw, vh - floorY);
+  ctx.strokeStyle = 'rgba(200,155,60,0.1)';
+  ctx.lineWidth = 1;
+  for (let y = floorY; y < vh; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(vw, y); ctx.stroke();
+  }
+
+  const sx = 450 - camera.x, sy = 380 - camera.y;
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.beginPath(); ctx.ellipse(sx, sy + 32, 30, 6, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#0a0806';
+  ctx.fillRect(sx - 18, sy - 10, 36, 40);
+  ctx.fillStyle = '#2a2418';
+  ctx.fillRect(sx - 16, sy - 8, 32, 38);
+  ctx.fillStyle = '#6a4a2a';
+  ctx.fillRect(sx - 8, sy - 30, 16, 24);
+  ctx.fillStyle = '#8a6a3a';
+  ctx.fillRect(sx - 6, sy - 38, 12, 12);
+
+  const spg = ctx.createRadialGradient(sx, sy, 10, sx, sy, 150);
+  spg.addColorStop(0, 'rgba(255,230,150,0.2)'); spg.addColorStop(1, 'rgba(255,230,150,0)');
+  ctx.fillStyle = spg;
+  ctx.beginPath(); ctx.arc(sx, sy, 150, 0, Math.PI*2); ctx.fill();
+
+  const vg = ctx.createRadialGradient(vw/2, vh/2, vw*0.3, vw/2, vh/2, vw*0.8);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.65)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, vw, vh);
+}
+
+function drawFramedArt(x, y, w, h, colours) {
+  ctx.fillStyle = '#3a2a10';
+  ctx.fillRect(x - 6, y - 6, w + 12, h + 12);
+  ctx.fillStyle = '#c89b3c';
+  ctx.fillRect(x - 4, y - 4, w + 8, h + 8);
+  ctx.fillStyle = '#e6b456';
+  ctx.fillRect(x - 4, y - 4, w + 8, 2);
+  ctx.fillRect(x - 4, y - 4, 2, h + 8);
+  ctx.fillStyle = '#8a6a2a';
+  ctx.fillRect(x - 4, y + h + 2, w + 8, 2);
+  ctx.fillRect(x + w + 2, y - 4, 2, h + 8);
+  const g = ctx.createLinearGradient(x, y, x + w, y + h);
+  g.addColorStop(0, colours[0]); g.addColorStop(0.5, colours[1]); g.addColorStop(1, colours[2]);
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  for (let i = 0; i < 5; i++) {
+    ctx.fillRect(x + Math.random()*w, y + Math.random()*h, Math.random()*20 + 5, 2);
+  }
+  const spg = ctx.createLinearGradient(x + w/2, y - 30, x + w/2, y + h + 20);
+  spg.addColorStop(0, 'rgba(255,230,150,0.15)'); spg.addColorStop(1, 'rgba(255,230,150,0)');
+  ctx.fillStyle = spg;
+  ctx.fillRect(x - 20, y - 30, w + 40, h + 50);
+}
+
+function drawDoors(vw, vh) {
+  for (const d of WORLD.doors) {
+    const sx = d.x - camera.x, sy = d.y - camera.y;
+    if (sx + d.w < 0 || sx > vw || sy + d.h < 0 || sy > vh) continue;
+    const t = (Date.now() / 800) % (Math.PI * 2);
+    const pulse = Math.sin(t) * 0.3 + 0.7;
+    ctx.fillStyle = '#0a0806';
+    ctx.fillRect(sx, sy, d.w, d.h);
+    ctx.fillStyle = '#2a1810';
+    ctx.fillRect(sx + 4, sy + 4, d.w - 8, d.h - 8);
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(sx + 4, sy + d.h/2 - 1, d.w - 8, 1);
+    ctx.fillStyle = '#c89b3c';
+    ctx.fillRect(sx + d.w - 14, sy + d.h/2 - 2, 4, 4);
+    ctx.shadowColor = '#c89b3c';
+    ctx.shadowBlur = 15 * pulse;
+    ctx.strokeStyle = `rgba(200,155,60,${pulse})`;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(sx, sy, d.w, d.h);
+    ctx.shadowBlur = 0;
+    const glow = ctx.createRadialGradient(sx + d.w/2, sy + d.h + 10, 0, sx + d.w/2, sy + d.h + 10, 60);
+    glow.addColorStop(0, 'rgba(200,155,60,0.2)'); glow.addColorStop(1, 'rgba(200,155,60,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(sx - 40, sy + d.h - 5, d.w + 80, 60);
+  }
+}
+
+function gameLoop(t) {
+  const dt = Math.min(0.05, (t - lastTime) / 1000);
+  lastTime = t;
+  updateMe(dt);
+  drawWorld();
+  requestAnimationFrame(gameLoop);
+}
+
+const SPEED = 150;
+function updateMe(dt) {
+  if (transitioning > 0 && transitioning < 500) return;
+  let dx = 0, dy = 0;
+  if (keys.ArrowUp    || keys.w || joyVec.y < -0.2) dy -= 1;
+  if (keys.ArrowDown  || keys.s || joyVec.y >  0.2) dy += 1;
+  if (keys.ArrowLeft  || keys.a || joyVec.x < -0.2) dx -= 1;
+  if (keys.ArrowRight || keys.d || joyVec.x >  0.2) dx += 1;
+  if (Math.abs(joyVec.x) > 0.2 || Math.abs(joyVec.y) > 0.2) {
+    dx = joyVec.x; dy = joyVec.y;
+  }
+  const mag = Math.hypot(dx, dy);
+  if (mag > 0) {
+    dx /= mag; dy /= mag;
+    me.x += dx * SPEED * dt;
+    me.y += dy * SPEED * dt;
+    me.walking = true;
+  } else {
+    me.walking = false;
+  }
+  me.x = Math.max(20, Math.min(WORLD.width - 20, me.x));
+  me.y = Math.max(20, Math.min(WORLD.height - 20, me.y));
+  nearDoor = null;
+  for (const d of WORLD.doors) {
+    if (me.x > d.x - 30 && me.x < d.x + d.w + 30 &&
+        me.y > d.y - 30 && me.y < d.y + d.h + 30) {
+      nearDoor = d; break;
+    }
+  }
+  syncMe();
+}
+
+let lastSync = 0;
+function syncMe() {
+  if (!fbDb || !me.id) return;
+  const now = Date.now();
+  if (now - lastSync < 90) return;
+  lastSync = now;
+  fbDb.ref('bw3_players/' + me.id).set({
+    nick: me.nick, charIdx: me.charIdx,
+    x: Math.round(me.x), y: Math.round(me.y),
+    walking: me.walking, room: currentRoom, ts: now
+  });
+}
+
+let playersRef = null;
+function listenPlayers() {
+  if (playersRef) playersRef.off();
+  playersRef = fbDb.ref('bw3_players');
+  playersRef.on('value', snap => {
+    const data = snap.val() || {};
+    const now = Date.now();
+    const next = {};
+    Object.entries(data).forEach(([id, p]) => {
+      if (id === me.id) return;
+      if (!p || !p.ts || (now - p.ts) > 30000) return;
+      if ((p.room || 'square') !== currentRoom) return;
+      next[id] = { id, ...p };
+    });
+    Object.keys(players).forEach(id => {
+      if (!next[id]) {
+        const t = document.getElementById('tag-'+id); if (t) t.remove();
+        const b = document.getElementById('bub-'+id); if (b) b.remove();
+      }
+    });
+    Object.values(next).forEach(p => ensureDom(p));
+    players = next;
+    updateCount();
+  });
+}
+
+function ensureDom(p) {
+  const wrap = document.getElementById('canvas-wrap');
+  if (!document.getElementById('tag-'+p.id)) {
+    const t = document.createElement('div');
+    t.id = 'tag-'+p.id;
+    t.className = 'nametag';
+    t.textContent = p.nick;
+    wrap.appendChild(t);
+  } else {
+    document.getElementById('tag-'+p.id).textContent = p.nick;
+  }
+  if (!document.getElementById('bub-'+p.id)) {
+    const b = document.createElement('div');
+    b.id = 'bub-'+p.id;
+    b.className = 'bubble';
+    b.style.display = 'none';
+    wrap.appendChild(b);
+  }
+}
+function ensureMyDom() {
+  const wrap = document.getElementById('canvas-wrap');
+  if (!document.getElementById('tag-'+me.id)) {
+    const t = document.createElement('div');
+    t.id = 'tag-'+me.id;
+    t.className = 'nametag';
+    t.textContent = me.nick;
+    wrap.appendChild(t);
+  }
+  if (!document.getElementById('bub-'+me.id)) {
+    const b = document.createElement('div');
+    b.id = 'bub-'+me.id;
+    b.className = 'bubble me';
+    b.style.display = 'none';
+    wrap.appendChild(b);
+  }
+}
+
+function updatePlayerOverlays() {
+  const all = [me, ...Object.values(players)];
+  for (const p of all) {
+    const sx = p.x - camera.x;
+    const sy = p.y - camera.y;
+    const tag = document.getElementById('tag-'+p.id);
+    if (tag) { tag.style.left = sx + 'px'; tag.style.top = (sy - 44) + 'px'; }
+    const b = bubbles[p.id];
+    const bub = document.getElementById('bub-'+p.id);
+    if (bub) {
+      if (b && b.until > Date.now()) {
+        bub.style.left = sx + 'px';
+        bub.style.top = (sy - 60) + 'px';
+        bub.style.display = 'block';
+      } else {
+        bub.style.display = 'none';
+      }
+    }
+  }
+}
+
+function updateCount() {
+  const n = 1 + Object.keys(players).length;
+  document.getElementById('online-count').innerHTML = `<span class="dot"></span>${n} HERE`;
+}
+
+function clearPlayerDom() {
+  Object.keys(players).forEach(id => {
+    const t = document.getElementById('tag-'+id); if (t) t.remove();
+    const b = document.getElementById('bub-'+id); if (b) b.remove();
+  });
+  players = {};
+}
+
+function changeRoom(toKey) {
+  if (transitioning || !ROOMS[toKey]) return;
+  transitioning = 1;
+  const fadeOut = setInterval(() => {
+    transitioning += 50;
+    if (transitioning >= 500) {
+      clearInterval(fadeOut);
+      clearPlayerDom();
+      currentRoom = toKey;
+      WORLD = ROOMS[toKey];
+      me.room = toKey;
+      me.x = WORLD.spawn.x;
+      me.y = WORLD.spawn.y;
+      nearDoor = null;
+      document.getElementById('place-name').textContent = WORLD.name;
+      document.getElementById('place-sub').textContent = WORLD.sub;
+      syncMe();
+      listenPlayers();
+      listenChat();
+      const fadeIn = setInterval(() => {
+        transitioning -= 50;
+        if (transitioning <= 0) {
+          transitioning = 0;
+          clearInterval(fadeIn);
+        }
+      }, 20);
+    }
+  }, 20);
+}
+
+let chatRef = null;
+function listenChat() {
+  if (chatRef) chatRef.off();
+  chatRef = fbDb.ref('bw3_chat/' + currentRoom).limitToLast(40);
+  chatRef.on('child_added', snap => {
+    const m = snap.val();
+    if (!m || !m.id || !m.text) return;
+    if (Date.now() - m.ts > 8000) return;
+    bubbles[m.id] = { text: m.text, until: Date.now() + 5500 };
+    const bub = document.getElementById('bub-'+m.id);
+    if (bub) bub.textContent = m.text;
+    setTimeout(() => { snap.ref.remove().catch(() => {}); }, 30000);
+  });
+}
+
+function sendChat() {
+  const inp = document.getElementById('chat-input');
+  const text = inp.value.trim();
+  if (!text || !fbDb) return;
+  inp.value = '';
+  fbDb.ref('bw3_chat/' + currentRoom).push({
+    id: me.id, nick: me.nick, text, ts: Date.now()
+  });
+  bubbles[me.id] = { text, until: Date.now() + 5500 };
+  const bub = document.getElementById('bub-'+me.id);
+  if (bub) bub.textContent = text;
+}
+
+function initInput() {
+  document.addEventListener('keydown', e => {
+    if (document.activeElement === document.getElementById('chat-input')) {
+      if (e.key === 'Enter') { sendChat(); e.preventDefault(); }
+      if (e.key === 'Escape') document.getElementById('chat-input').blur();
+      return;
+    }
+    keys[e.key] = true;
+    keys[e.key.toLowerCase()] = true;
+    if (e.key === 'Enter') {
+      document.getElementById('chat-input').focus();
+      e.preventDefault();
+    }
+    if (e.key.toLowerCase() === 'e') {
+      if (nearDoor && !transitioning) changeRoom(nearDoor.to);
+    }
+  });
+  document.addEventListener('keyup', e => {
+    keys[e.key] = false;
+    keys[e.key.toLowerCase()] = false;
+  });
+
+  const joy = document.getElementById('joy');
+  const stick = document.getElementById('joy-stick');
+  let active = false, centre = null;
+  const onStart = (e) => {
+    active = true;
+    const r = joy.getBoundingClientRect();
+    centre = { x: r.left + r.width/2, y: r.top + r.height/2 };
+    e.preventDefault();
+  };
+  const onMove = (e) => {
+    if (!active || !centre) return;
+    const p = e.touches ? e.touches[0] : e;
+    const dx = p.clientX - centre.x;
+    const dy = p.clientY - centre.y;
+    const max = 35;
+    const d = Math.min(max, Math.hypot(dx, dy));
+    const ang = Math.atan2(dy, dx);
+    const sx = Math.cos(ang) * d, sy = Math.sin(ang) * d;
+    stick.style.transform = `translate(calc(-50% + ${sx}px), calc(-50% + ${sy}px))`;
+    joyVec.x = sx / max;
+    joyVec.y = sy / max;
+    e.preventDefault();
+  };
+  const onEnd = () => {
+    active = false;
+    joyVec = { x: 0, y: 0 };
+    stick.style.transform = 'translate(-50%,-50%)';
+  };
+  joy.addEventListener('touchstart', onStart, { passive: false });
+  joy.addEventListener('touchmove',  onMove,  { passive: false });
+  joy.addEventListener('touchend',   onEnd);
+  joy.addEventListener('mousedown',  onStart);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onEnd);
+
+  document.getElementById('game').addEventListener('click', e => {
+    if (nearDoor && !transitioning) changeRoom(nearDoor.to);
+  });
+}
+
+function enterWorld() {
+  const nick = document.getElementById('nick').value.trim();
+  if (!nick) { document.getElementById('nick').focus(); return; }
+  me.nick = nick;
+  me.charIdx = selectedIdx;
+  me.id = 'p_' + Math.random().toString(36).slice(2, 10);
+  me.room = 'square';
+  currentRoom = 'square';
+  WORLD = ROOMS.square;
+  me.x = WORLD.spawn.x;
+  me.y = WORLD.spawn.y;
+
+  localStorage.setItem('bw3_nick', nick);
+  localStorage.setItem('bw3_char', me.charIdx);
+
+  initFB();
+  fbDb.ref('bw3_players/' + me.id).onDisconnect().remove();
+
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('world').classList.add('live');
+  document.getElementById('place-name').textContent = WORLD.name;
+  document.getElementById('place-sub').textContent = WORLD.sub;
+
+  setTimeout(() => {
+    initCanvas();
+    ensureMyDom();
+    listenPlayers();
+    listenChat();
+    requestAnimationFrame(gameLoop);
+  }, 50);
+}
+
+function leaveWorld() {
+  if (fbDb && me.id) fbDb.ref('bw3_players/' + me.id).remove();
+  location.reload();
+}
+
+function showHelp() {
+  alert('BRITWORLD · AFTER DARK\n\n' +
+        'A walkable social space for late-night conversations.\n\n' +
+        '• WALK with WASD / arrows / joystick\n' +
+        '• TALK with Enter (or tap chat bar)\n' +
+        '• ENTER buildings with E (or tap screen)\n' +
+        '• Your chat bubble shows above your head\n' +
+        '• You only see people in the same place as you\n\n' +
+        'Places to go:\n' +
+        '— The Lamb & Flag (pub)\n' +
+        '— The Blue Note (jazz lounge)\n' +
+        '— Neon Alley (arcade)\n' +
+        '— The Gilded Frame (gallery)');
+}
+
+function startup() {
+  renderAvatars();
+  const savedNick = localStorage.getItem('bw3_nick');
+  const savedChar = localStorage.getItem('bw3_char');
+  if (savedNick) document.getElementById('nick').value = savedNick;
+  if (savedChar !== null) {
+    const idx = parseInt(savedChar);
+    if (idx >= 0 && idx < CHARACTERS.length) {
+      selectedIdx = idx;
+      document.querySelectorAll('.av').forEach((el, i) => {
+        el.classList.toggle('sel', i === idx);
+      });
+    }
+  }
+  initInput();
+  setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 500);
+  document.getElementById('nick').addEventListener('keydown', e => {
+    if (e.key === 'Enter') enterWorld();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', startup);
+</script>
+</body>
+</html>
