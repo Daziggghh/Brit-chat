@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "crons": [
+    { "path": "/api/irc-reader", "schedule": "* * * * *" }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.britchat.co.uk" }],
+      "destination": "https://britchat.co.uk/:path*",
+      "permanent": true
+    }
+  ]
+}
